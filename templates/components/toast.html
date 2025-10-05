@@ -1,0 +1,124 @@
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer">
+</div>
+
+<script>
+  class ToastManager {
+    constructor() {
+      this.toastContainer = document.getElementById('toastContainer');
+      this.maxToasts = 3;
+      this.toastCounter = 0;
+    }
+
+    show(message, type, duration = 5000) {
+      if (this.toastContainer.children.length >= this.maxToasts) {
+        const oldestToast = this.toastContainer.firstChild;
+        if (oldestToast) {
+          oldestToast.remove();
+        }
+      }
+
+      const toastId = `toast-${++this.toastCounter}`;
+      const toastHtml = this.createToastHtml(toastId, message, type);
+
+      this.toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+      const toastElement = document.getElementById(toastId);
+
+      if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+        const toast = new bootstrap.Toast(toastElement, {
+          autohide: true,
+          delay: duration
+        });
+        toast.show();
+
+        toastElement.addEventListener('hidden.bs.toast', () => {
+          toastElement.remove();
+        });
+      } else {
+        this.showFallbackToast(message, type, duration);
+        setTimeout(() => {
+          toastElement.remove();
+        }, duration);
+      }
+    }
+
+    createToastHtml(toastId, message, type) {
+      let title, titleClass;
+
+      switch (type) {
+        case 'success':
+          title = '성공';
+          titleClass = 'text-success';
+          break;
+        case 'error':
+          title = '오류';
+          titleClass = 'text-danger';
+          break;
+        case 'warning':
+          title = '경고';
+          titleClass = 'text-warning';
+          break;
+        default:
+          title = '알림';
+          titleClass = 'text-primary';
+      }
+
+      return `
+      <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+          <strong class="me-auto ${titleClass}">${title}</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          ${message}
+        </div>
+      </div>
+    `;
+    }
+
+    showFallbackToast(message, type, duration) {
+      if (type === 'error') {
+        alert('오류: ' + message);
+      } else {
+        alert(message);
+      }
+    }
+
+    clearAll() {
+      this.toastContainer.innerHTML = '';
+    }
+
+    remove(toastId) {
+      const toast = document.getElementById(toastId);
+      if (toast) {
+        toast.remove();
+      }
+    }
+  }
+
+  window.toastManager = new ToastManager();
+
+  function showInfoToast(message, duration = 5000) {
+    if (window.toastManager) {
+      window.toastManager.show(message, 'info', duration);
+    }
+  }
+
+  function showSuccessToast(message, duration = 5000) {
+    if (window.toastManager) {
+      window.toastManager.show(message, 'success', duration);
+    }
+  }
+
+  function showErrorToast(message, duration = 5000) {
+    if (window.toastManager) {
+      window.toastManager.show(message, 'error', duration);
+    }
+  }
+
+  function showWarningToast(message, duration = 5000) {
+    if (window.toastManager) {
+      window.toastManager.show(message, 'warning', duration);
+    }
+  }
+</script>

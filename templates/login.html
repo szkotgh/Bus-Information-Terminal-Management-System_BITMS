@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between">
+            <div>
+                <h1>BITMS - Login</h1>
+                <span>Bus Information Terminal Management System</span>
+            </div>
+            <div class="align-self-end">
+                <a href="{{ url_for('router.client.index') }}">Home</a>
+            </div>
+        </div>
+        <hr>
+        <form method="POST" action="{{ url_for('router.client.login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="form-group mb-3">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" name="password" placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+    </div>
+{% endblock body %}

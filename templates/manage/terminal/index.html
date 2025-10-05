@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1>BITMS</h1>
+            <span>Bus Information Terminal Management System</span>
+        </div>
+        <div class="align-self-end">
+            <a href="{{ url_for('router.client.index') }}">Home</a>
+        </div>
+    </div>
+    <hr>
+    
+    <div class="d-flex justify-content-between">
+        <div>
+            <h3>Terminal Management</h3>
+        </div>
+        <div class="align-self-end">
+            <button class="btn btn-primary" onclick="createTerminal()">Create Terminal</button>
+        </div>
+    </div>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Auth Token</th>
+                <th scope="col">Status</th>
+                <th scope="col">Create</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if not terminal_list %}
+                <tr>
+                    <td colspan="5" class="text-center">생성된 터미널이 없습니다.</td>
+                </tr>
+            {% else %}
+                {% for terminal in terminal_list %}
+                <tr onclick="terminalConfigFormShow('{{terminal.id}}')" style="cursor: pointer;">
+                    <th scope="row">{{ terminal.id }}</th>
+                    <td>{{ terminal.name }}</td>
+                    <td>{{ terminal.auth_token }}</td>
+                    <td>{{ terminal.status }}</td>
+                    <td>{{ terminal.created_at }}</td>
+                </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Setting -->
+{% if terminal_list %}
+    {% for terminal in terminal_list %}
+        <div class="modal fade" id="terminal-config-modal-{{terminal.id}}" tabindex="-1" aria-labelledby="terminal-config-modalLabel-{{terminal.id}}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">단말기 설정</h5>
+                        <button type="button" class="btn-close" tabindex="-1" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="terminal-config-form-{{terminal.id}}">
+                            <div class="mb-2">
+                                <label for="terminal-id-{{terminal.id}}" class="col-form-label">ID</label>
+                                <input type="text" class="form-control" id="terminal-id-{{terminal.id}}" value="{{ terminal.id }}" disabled tabindex="-1">
+                            </div>
+                            <div class="mb-2">
+                                <label for="terminal-name-{{terminal.id}}" class="col-form-label">이름</label>
+                                <input type="text" class="form-control" id="terminal-name-{{terminal.id}}" value="{{ terminal.name }}">
+                            </div>
+                            <div class="mb-2">
+                                <label for="terminal-auth-token-{{terminal.id}}" class="col-form-label">인증 토큰</label>
+                                <input type="text" class="form-control" id="terminal-auth-token-{{terminal.id}}" value="{{ terminal.auth_token }}" disabled tabindex="-1">
+                            </div>
+                            <div class="mb-2">
+                                <label for="terminal-status-{{terminal.id}}" class="col-form-label">상태</label>
+                                <select class="form-select" id="terminal-status-{{terminal.id}}">
+                                    <option value="active" {% if terminal.status == 'active' %}selected{% endif %}>활성</option>
+                                    <option value="deactive" {% if terminal.status == 'deactive' %}selected{% endif %}>비활성</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label for="created-at-{{terminal.id}}" class="col-form-label">생성일</label>
+                                <input type="text" class="form-control readonly" id="created-at-{{terminal.id}}" value="{{ terminal.created_at }}" disabled tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="terminalConfigFormUpdateAuthToken('{{terminal.id}}')">인증토큰 갱신</button>
+                        <button type="button" class="btn btn-danger" onclick="deleteTerminal('{{terminal.id}}')">삭제</button>
+                        <button type="button" class="btn btn-primary" onclick="terminalConfigFormSubmit('{{terminal.id}}')">수정</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endblock body %}
+
+{% block scripts %}
+<script>
+    function createTerminal() {
+        const terminalName = prompt("생성할 단말기 이름을 입력하세요:");
+        if (terminalName) {
+            $.ajax({
+                url: '{{ url_for("router.client.terminal.create") }}',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: terminalName }),
+                success: (response) => {
+                    alert(response.message)
+                    reloadPage();
+                },
+                error: (error) => {
+                    alert(error.responseJSON.message || 'Error occurred');
+                }
+            });
+        }
+    }
+
+    function terminalConfigFormShow(terminalId) {
+        $('#terminal-config-modal-' + terminalId).modal('show');
+    }
+
+    function terminalConfigFormHide(terminalId) {
+        $('#terminal-config-modal-' + terminalId).modal('hide');
+    }
+
+    function terminalConfigFormSubmit(terminalId) {
+        const requestData = {
+            id: terminalId,
+            name: $('#terminal-name-' + terminalId).val(),
+            status: $('#terminal-status-' + terminalId).val()
+        };
+        $.ajax({
+            url: '{{ url_for("router.client.terminal.update") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: (response) => {
+                alert(response.message)
+                terminalConfigFormHide(terminalId);
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error.responseJSON.message || 'Error occurred');
+            }
+        });
+    }
+
+    function terminalConfigFormUpdateAuthToken(terminalId) {
+        if (!confirm(`${terminalId} 단말기의 인증 토큰을 업데이트하시겠습니까?`)) return;
+        $.ajax({
+            url: '{{ url_for("router.client.terminal.update_auth_token") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: terminalId }),
+            success: (response) => {
+                alert(response.message)
+                terminalConfigFormHide(terminalId);
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error.responseJSON.message || 'Error occurred');
+            }
+        });
+    }
+
+    function deleteTerminal(terminalId) {
+        if (!confirm(`${terminalId} 단말기를 삭제하시겠습니까?`)) return;
+
+        $.ajax({
+            url: '{{ url_for("router.client.terminal.delete") }}',
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: terminalId }),
+            success: (response) => {
+                alert(response.message)
+                terminalConfigFormHide(terminalId);
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error.responseJSON.message || 'Error occurred');
+            }
+        });
+    }
+</script>
+{% endblock scripts %}

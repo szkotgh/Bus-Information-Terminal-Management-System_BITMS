@@ -1,0 +1,76 @@
+<style>
+  #global-loader {
+    pointer-events: none;
+    opacity: 0;
+    position: fixed;
+    z-index: 99999;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(30, 30, 30, 0.8);
+    transition: opacity 0.3s ease-in-out;
+  }
+</style>
+
+<div id="global-loader" aria-hidden="true"></div>
+
+<script>
+  (() => {
+    const SELECTOR = '#global-loader';
+    let __loaderCount = 0;
+    let __hideTimer = null;
+
+    function getLoader() {
+      return document.querySelector(SELECTOR);
+    }
+
+    function showLoader() {
+      const loader = getLoader();
+      if (!loader) return;
+      if (__hideTimer) {
+        clearTimeout(__hideTimer);
+        __hideTimer = null;
+      }
+      __loaderCount++;
+      loader.style.pointerEvents = 'all';
+      loader.style.opacity = '1';
+      loader.setAttribute('aria-hidden', 'false');
+    }
+
+    function hideLoader(force) {
+      const loader = getLoader();
+      if (!loader) return;
+      if (force) __loaderCount = 0;
+      else if (__loaderCount > 0) __loaderCount--;
+
+      if (__loaderCount > 0) return;
+
+      if (__hideTimer) clearTimeout(__hideTimer);
+      __hideTimer = setTimeout(() => {
+        loader.style.opacity = '0';
+        const onEnd = (e) => {
+          if (e && e.propertyName !== 'opacity') return;
+          loader.style.pointerEvents = 'none';
+          loader.setAttribute('aria-hidden', 'true');
+          loader.removeEventListener('transitionend', onEnd);
+        };
+        loader.addEventListener('transitionend', onEnd);
+        setTimeout(() => {
+          loader.style.pointerEvents = 'none';
+          loader.setAttribute('aria-hidden', 'true');
+        }, 400);
+        __hideTimer = null;
+      }, 100);
+    }
+
+    window.showLoader = showLoader;
+    window.hideLoader = hideLoader;
+    window.showGlobalLoader = showLoader;
+    window.hideGlobalLoader = hideLoader;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      hideLoader(true);
+    });
+  })();
+</script>

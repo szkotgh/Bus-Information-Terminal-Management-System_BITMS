@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <title>{% if title %}{{ title }}{% else %}BITMS{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/bootstrap.min.css') }}">
+    {% block head %}{% endblock head %}
+</head>
+
+<body>
+    {% block body %}{% endblock body %}
+    {% include 'components/toast.html' %}
+    {% include 'components/flash.html' %}
+    {% include 'components/loader.html' %}
+
+    <script type="text/javascript" src="{{ url_for('static', filename='assets/jquery-3.7.1.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='assets/bootstrap.min.js') }}"></script>
+    <script>
+        function reloadPage(delay=0) {
+            setTimeout(() => {
+                window.location.reload();
+            }, delay);
+        }
+
+        $(document).ready(() => {
+            $(document).ajaxStart((event, xhr, settings) => {
+                showLoader();
+            }).ajaxStop(() => {
+                hideLoader();
+            });
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            $.ajaxPrefilter((options, originalOptions, xhr) => {
+                const method = (options.type || 'GET').toUpperCase();
+                const isSafeMethod = /^(GET|HEAD|OPTIONS|TRACE)$/.test(method);
+                const isSameOrigin = options.url.startsWith('/') || options.url.startsWith(window.location.origin);
+                if (!isSafeMethod && isSameOrigin) {
+                    xhr.setRequestHeader('X-CSRFToken', csrfToken);
+                }
+            });
+        });
+    </script>
+    {% block scripts %}{% endblock scripts %}
+</body>
+
+</html>

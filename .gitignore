@@ -1,0 +1,6 @@
+__pycache__/
+nohup.out
+test_api.py
+
+.env
+db/database.db
