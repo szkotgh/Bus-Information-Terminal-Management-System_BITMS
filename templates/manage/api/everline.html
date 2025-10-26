@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1>BITMS</h1>
+            <span>Bus Information Terminal Management System</span>
+        </div>
+        <div class="align-self-end">
+            <a href="{{ url_for('router.client.index') }}">Home</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="d-flex justify-content-between">
+        <div>
+            <h3>에버라인 API</h3>
+            <span class="text-muted">에버라인 API를 사용합니다.</span>
+        </div>
+        <div class="align-self-end">
+        </div>
+    </div>
+
+    <div class="mt-3 card-group">
+        <div class="card">
+            <div class="card-header">
+                /api/everline
+            </div>
+            <div class="card-body">
+                header | Authorization: Bearer &lt;terminal_auth_token&gt;<br>
+
+                <div class="accordion accordion-flush mt-2" id="accordionFlushExample">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-everline" aria-expanded="false" aria-controls="accordion-everline">
+                                response | json
+                            </button>
+                        </h2>
+                        <div id="accordion-everline" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body">
+                                <pre>
+{
+    "code": 200,
+    "data": [
+        {
+            "DestCode": "Y110",
+            "LineNo": "E1",
+            "StCode": "Y118",
+            "StatusCode": "3",
+            "TrainNo": "17",
+            "code": "1",
+            "etc": "1",
+            "time": "26",
+            "updownCode": "1",
+            "zero": "0"
+        }
+        ...
+    ],
+    "message": "OK"
+}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock body %}
+
+{% block scripts %}
+<script>
+</script>
+{% endblock scripts %}

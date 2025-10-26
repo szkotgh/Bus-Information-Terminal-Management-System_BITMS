@@ -1,7 +1,7 @@
 import sqlite3
 
 class DBResultDTO:
-    def __init__(self, success: bool, message: str = "", data=None):
+    def __init__(self, success: bool, message: str = "", data = None):
         self.success = success
         self.message = message
         self.data = data

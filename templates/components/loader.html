@@ -13,13 +13,25 @@
   }
 </style>
 
-<div id="global-loader" aria-hidden="true"></div>
+<div id="global-loader" aria-hidden="true">
+  <div class="d-flex justify-content-center align-items-center h-100">
+    <div class="spinner-border text-light" role="status">
+      <span class="visually-hidden"></span>
+    </div>
+    <div class="text-light ms-3">
+      처리 중입니다 <span id="loader-timeout"></span>
+    </div>
+  </div>
+</div>
 
 <script>
   (() => {
     const SELECTOR = '#global-loader';
     let __loaderCount = 0;
     let __hideTimer = null;
+    let __timeoutTimer = null;
+    const __timeout = 10000;
+    const __timeoutLabel = document.getElementById('loader-timeout');
 
     function getLoader() {
       return document.querySelector(SELECTOR);
@@ -32,10 +44,18 @@
         clearTimeout(__hideTimer);
         __hideTimer = null;
       }
+      if (__timeoutTimer) {
+        clearTimeout(__timeoutTimer);
+        __timeoutTimer = null;
+      }
       __loaderCount++;
       loader.style.pointerEvents = 'all';
       loader.style.opacity = '1';
       loader.setAttribute('aria-hidden', 'false');
+
+      __timeoutTimer = setTimeout(() => {
+        __timeoutLabel.textContent = `(화면이 지속되면 새로고침하세요)`;
+      }, __timeout);
     }
 
     function hideLoader(force) {
@@ -47,6 +67,10 @@
       if (__loaderCount > 0) return;
 
       if (__hideTimer) clearTimeout(__hideTimer);
+      if (__timeoutTimer) {
+        clearTimeout(__timeoutTimer);
+        __timeoutTimer = null;
+      }
       __hideTimer = setTimeout(() => {
         loader.style.opacity = '0';
         const onEnd = (e) => {

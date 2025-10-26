@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1>BITMS</h1>
+            <span>Bus Information Terminal Management System</span>
+        </div>
+        <div class="align-self-end">
+            <a href="{{ url_for('router.client.index') }}">Home</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="d-flex justify-content-between">
+        <div>
+            <h3>단말기 화면 프리셋 설정</h3>
+        </div>
+        <div class="align-self-end">
+            <button class="btn btn-primary" onclick="createScreenPresetModalShow()">Create Screen Preset</button>
+        </div>
+    </div>
+
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Command</th>
+                <th scope="col">Value Desc</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for screenPreset in screen_preset_list %}
+                <tr style="cursor: pointer;" onclick="infoScreenPresetModalShow({{ screenPreset.id }})">
+                    <td>{{ screenPreset.id }}</td>
+                    <td>{{ screenPreset.name }}</td>
+                    <td>{{ screenPreset.command }}</td>
+                    <td>{{ screenPreset.value_desc }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+
+<!-- Info Modal -->
+{% for screenPreset in screen_preset_list %}
+<div class="modal fade" id="infoScreenPresetModal{{ screenPreset.id }}" tabindex="-1" aria-labelledby="infoScreenPresetModalLabel{{ screenPreset.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="infoScreenPresetModalLabel{{ screenPreset.id }}">화면 프리셋 상세</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label for="id" class="col-form-label">아이디</label>
+                    <input type="text" class="form-control" id="infoScreenPresetId{{ screenPreset.id }}" name="id" value="{{ screenPreset.id }}" disabled>
+                </div>
+                <div class="mb-2">
+                    <label for="name" class="col-form-label">프리셋 이름</label>
+                    <input type="text" class="form-control" id="infoScreenPresetName{{ screenPreset.id }}" name="name" value="{{ screenPreset.name }}">
+                </div>
+                <div class="mb-2">
+                    <label for="command" class="col-form-label">명령값</label>
+                    <input type="text" class="form-control" id="infoScreenPresetCommand{{ screenPreset.id }}" name="command" value="{{ screenPreset.command }}">
+                </div>
+                <div class="mb-2">
+                    <label for="value_desc" class="col-form-label">값 설명</label>
+                    <input type="text" class="form-control" id="infoScreenPresetValueDesc{{ screenPreset.id }}" name="value_desc" value="{{ screenPreset.value_desc }}">
+                </div>
+                <div class="mb-2">
+                    <label for="created_at" class="col-form-label">생성일</label>
+                    <input type="text" class="form-control" id="infoScreenPresetCreatedAt{{ screenPreset.id }}" name="created_at" value="{{ screenPreset.created_at }}" disabled>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="deleteScreenPreset({{ screenPreset.id }})">삭제</button>
+                <button type="button" class="btn btn-primary" onclick="updateScreenPreset({{ screenPreset.id }})">수정</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Create Modal -->
+<div class="modal fade" id="createScreenPresetModal" tabindex="-1" aria-labelledby="createScreenPresetModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="createScreenPresetModalLabel">화면 프리셋 생성</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label for="name" class="col-form-label">프리셋 이름</label>
+                    <input type="text" class="form-control" id="createScreenPresetName" name="name">
+                </div>
+                <div class="mb-2">
+                    <label for="command" class="col-form-label">명령값</label>
+                    <input type="text" class="form-control" id="createScreenPresetCommand" name="command">
+                </div>
+                <div class="mb-2">
+                    <label for="value_desc" class="col-form-label">값 설명</label>
+                    <input type="text" class="form-control" id="createScreenPresetValueDesc" name="value_desc">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="createScreenPresetSubmit()">생성</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}
+
+{% block scripts %}
+<script>
+    function createScreenPresetModalShow() {
+        $('#createScreenPresetModal').modal('show');
+    }
+
+    function infoScreenPresetModalShow(id) {
+        $('#infoScreenPresetModal' + id).modal('show');
+    }
+
+    function createScreenPresetSubmit() {
+        const name = $('#createScreenPresetName').val();
+        const command = $('#createScreenPresetCommand').val();
+        const value_desc = $('#createScreenPresetValueDesc').val();
+        if (!name || !command || !value_desc) {
+            alert('누락된 값을 확인하십시오.');
+            return;
+        }
+        $.ajax({
+            url: '{{ url_for("router.client.manage.screen_preset.create") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ name, command, value_desc }),
+            success: (response) => {
+
+                alert(response.message);
+                $('#createScreenPresetModal').modal('hide');
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '생성 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    function deleteScreenPreset(id) {
+        if (!confirm('해당 프리셋을 정말 삭제하시겠습니까?\n연관된 정보가 삭제되거나 오류가 발생할 수 있습니다.')) {
+            return;
+        }
+        if (!confirm('(2차확인) 해당 프리셋을 정말 삭제하시겠습니까?\n연관된 정보가 삭제되거나 오류가 발생할 수 있습니다.')) {
+            return;
+        }
+
+        $.ajax({
+            url: '{{ url_for("router.client.manage.screen_preset.delete") }}',
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({ id }),
+            success: (response) => {
+                alert(response.message);
+                $('#infoScreenPresetModal' + id).modal('hide');
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '삭제 중 오류가 발생했습니다.');
+            }
+        });
+    }
+
+    function updateScreenPreset(id) {
+        const name = $('#infoScreenPresetName' + id).val();
+        const command = $('#infoScreenPresetCommand' + id).val();
+        const value_desc = $('#infoScreenPresetValueDesc' + id).val();
+        
+        if (!name || !command || !value_desc) {
+            alert('누락된 값을 확인하십시오.');
+            return;
+        }
+        
+        $.ajax({
+            url: '{{ url_for("router.client.manage.screen_preset.update") }}',
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({ id, name, command, value_desc }),
+            success: (response) => {
+                alert(response.message);
+                $('#infoScreenPresetModal' + id).modal('hide');
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '수정 중 오류가 발생했습니다.');
+            }
+        });
+    }
+</script>
+{% endblock scripts %}

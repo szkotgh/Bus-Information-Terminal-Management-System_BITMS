@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1>BITMS</h1>
+            <span>Bus Information Terminal Management System</span>
+        </div>
+        <div class="align-self-end">
+            <a href="{{ url_for('router.client.index') }}">Home</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="d-flex justify-content-between">
+        <div>
+            <h3>날씨 API</h3>
+            <a href="https://openweathermap.org/current" target="_blank">Current Weather Doc</a>
+            <a href="https://openweathermap.org/api/air-pollution" target="_blank">Air Pollution Doc</a>
+        </div>
+        <div class="align-self-end">
+        </div>
+    </div>
+
+    <div class="mt-3 card-group">
+        <div class="card">
+            <div class="card-header">
+                <span>/api/weather/weather</span>
+            </div>
+            <div class="card-body">
+                <span>header | Authorization: Bearer &lt;terminal_auth_token&gt;</span><br>
+                <span>params | x&#40;float&#41;, y&#40;float&#41;</span><br>
+
+                <div class="accordion accordion-flush mt-2" id="accordionFlushExample">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-weather" aria-expanded="false" aria-controls="accordion-weather">
+                                <span>response | json</span>
+                            </button>
+                        </h2>
+                        <div id="accordion-weather" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body">
+                                <pre>
+{
+    "code": 200,
+    "data": {
+        "base": "stations",
+        "clouds": {
+            "all": 20
+        },
+        "cod": 200,
+        "coord": {
+            "lat": 37.246,
+            "lon": 127.213
+        },
+        "dt": 1761099055,
+        "id": 1832427,
+        "main": {
+            "feels_like": 14.7,
+            "grnd_level": 1010,
+            "humidity": 63,
+            "pressure": 1029,
+            "sea_level": 1029,
+            "temp": 15.45,
+            "temp_max": 15.5,
+            "temp_min": 15.45
+        },
+        "name": "Yongin",
+        "sys": {
+            "country": "KR",
+            "id": 5509,
+            "sunrise": 1761083110,
+            "sunset": 1761122751,
+            "type": 1
+        },
+        "timezone": 32400,
+        "visibility": 10000,
+        "weather": [
+            {
+                "description": "약간의 구름이 낀 하늘",
+                "icon": "02d",
+                "id": 801,
+                "main": "Clouds"
+            }
+        ],
+        "wind": {
+            "deg": 20,
+            "speed": 1.54
+        }
+    },
+    "message": "OK"
+}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                /api/weather/airpollution
+            </div>
+            <div class="card-body">
+                header | Authorization: Bearer &lt;terminal_auth_token&gt;<br>
+                params | x&#40;float&#41;, y&#40;float&#41;<br>
+
+                <div class="accordion accordion-flush mt-2" id="accordionFlushExample">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accordion-airpollution" aria-expanded="false" aria-controls="accordion-airpollution">
+                                response | json
+                            </button>
+                        </h2>
+                        <div id="accordion-airpollution" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body">
+                                <pre>
+{
+    "code": 200,
+    "data": {
+        "co": 301.09,
+        "nh3": 1.89,
+        "no": 25.72,
+        "no2": 35.6,
+        "o3": 30.08,
+        "pm10": 24.31,
+        "pm2_5": 19.68,
+        "so2": 8.95
+    },
+    "message": "OK"
+}
+                                </pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock body %}
+
+{% block scripts %}
+<script>
+</script>
+{% endblock scripts %}

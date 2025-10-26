@@ -1,16 +1,19 @@
-from flask import Flask
-from flask_wtf.csrf import CSRFProtect
-import router
+from flask import Flask, send_file
 from dotenv import load_dotenv
 import os
+import flask_wtf.csrf as wtf_csrf
+from modules.extensions import socketio, csrf
+import modules.utils as utils
+import router
+import sockets  # noqa: F401
 
 load_dotenv()
 
 app = Flask(__name__)
-csrf = CSRFProtect(app)
+csrf.init_app(app)
 
 app.secret_key = os.environ['SECRET_KEY']
-app.config['SESSION_COOKIE_NAME'] = 'session'
+app.config['SESSION_COOKIE_NAME'] = 'sid'
 app.config['SESSION_COOKIE_PATH'] = '/'
 app.config['SESSION_COOKIE_DOMAIN'] = None
 app.config['SESSION_COOKIE_HTTPONLY'] = True
@@ -19,6 +22,14 @@ app.config['SESSION_COOKIE_MAX_AGE'] = 3600
 app.config['SESSION_COOKIE_SECURE'] = True
 
 app.register_blueprint(router.bp)
+
+@app.route('/favicon.ico', methods=['GET'])
+def favicon():
+    return send_file('static/favicon.ico')
+
+@app.route('/robots.txt', methods=['GET'])
+def robots():
+    return send_file('static/robots.txt')
 
 @app.after_request
 def add_security_headers(response):
@@ -39,5 +50,16 @@ def add_security_headers(response):
     
     return response
 
+@app.errorhandler(wtf_csrf.CSRFError)
+def handle_csrf_error(e):
+    return utils.ResultDTO(400, e).to_response()
+
+# @app.errorhandler(Exception)
+# def handle_exception(e):
+#     if hasattr(e, 'code'):
+#         return utils.ResultDTO(e.code, str(e)).to_response()
+#     return utils.ResultDTO(500, str(e)).to_response()
+
 if __name__ == '__main__':
-    app.run(host=os.environ["HOST_IP"], port=int(os.environ["HOST_PORT"]), debug=True)
+    socketio.init_app(app, cors_allowed_origins="*")
+    socketio.run(app, host=os.environ["HOST_IP"], port=int(os.environ["HOST_PORT"]), debug=True)

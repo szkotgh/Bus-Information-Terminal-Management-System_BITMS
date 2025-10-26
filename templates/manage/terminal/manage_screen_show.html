@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1>BITMS</h1>
+            <span>Bus Information Terminal Management System</span>
+        </div>
+        <div class="align-self-end">
+            <a href="{{ url_for('router.client.index') }}">Home</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="d-flex justify-content-between">
+        <div>
+            <h3>단말기 화면 관리</h3>
+        </div>
+        <button class="btn btn-primary" onclick="createScreenPresetModalShow()">Create Screen Preset</button>
+    </div>
+
+    <label for="terminalSelect">단말기 선택</label>
+    <select class="form-select" id="terminalSelect" onchange="changeTerminal(this.value)">
+        <option value="" selected disabled>Select Terminal</option>
+        {% for terminal in terminal_list %}
+            <option value="{{ terminal.id }}">{{ terminal.name }}&nbsp;&#40;{{ terminal.id }}&#41;</option>
+        {% endfor %}
+    </select>
+    <span>{{ terminal_list.length }}</span>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">TID</th>
+                <th scope="col">PID</th>
+                <th scope="col">is Active</th>
+                <th scope="col">Order ID</th>
+                <th scope="col">Desc</th>
+                <th scope="col">Value</th>
+                <th scope="col">Created At</th>
+            </tr>
+        </thead>
+        <tbody id="screenShowList">
+            <tr>
+                <td colspan="8" class="text-center">단말기를 선택하십시오.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Update Modal -->
+{% for screenShow in screen_show_list %}
+<div class="modal fade" id="updateScreenShowModal{{ screenShow.id }}" tabindex="-1" aria-labelledby="updateScreenShowModalLabel{{ screenShow.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="updateScreenShowModalLabel{{ screenShow.id }}">화면 정보 수정</h1>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label for="updateScreenShowId" class="col-form-label">ID</label>
+                    <input type="text" class="form-control" id="updateScreenShowId{{ screenShow.id }}" name="id" value="{{ screenShow.id }}" disabled>
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowTerminalId" class="col-form-label">단말기ID</label>
+                    <input type="text" class="form-control" id="updateScreenShowTerminalId{{ screenShow.id }}" name="terminal_id" value="{{ screenShow.terminal_id }}" disabled>
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowScreenPresetId" class="col-form-label">프리셋</label>
+                    <select class="form-select" id="updateScreenShowScreenPresetId{{ screenShow.id }}" name="screen_preset_id">
+                        {% for screenPreset in screen_preset_list %}
+                            <option value="{{ screenPreset.id }}" {% if screenPreset.id == screenShow.screen_preset_id %}selected{% endif %}>{{ screenPreset.name }}&nbsp;&#40;{{ screenPreset.id }}&#41;</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowIsActive" class="col-form-label">활성화</label>
+                    <select class="form-select" id="updateScreenShowIsActive{{ screenShow.id }}" name="is_active">
+                        <option value="true" {% if screenShow.is_active %}selected{% endif %}>활성화</option>
+                        <option value="false" {% if not screenShow.is_active %}selected{% endif %}>비활성화</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowOrderId" class="col-form-label">정렬 순서</label>
+                    <input type="number" class="form-control" id="updateScreenShowOrderId{{ screenShow.id }}" name="order_id" min="1" value="{{ screenShow.order_id }}">
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowDesc" class="col-form-label">설명</label>
+                    <input type="text" class="form-control" id="updateScreenShowDesc{{ screenShow.id }}" name="desc" value="{{ screenShow.desc }}">
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowValue" class="col-form-label">값</label>
+                    <input type="text" class="form-control" id="updateScreenShowValue{{ screenShow.id }}" name="value" value="{{ screenShow.value }}">
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowCreatedAt" class="col-form-label">생성일</label>
+                    <input type="text" class="form-control" id="updateScreenShowCreatedAt{{ screenShow.id }}" name="created_at" value="{{ screenShow.created_at }}" disabled>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger" onclick="deleteScreenShow({{ screenShow.id }})">삭제</button>
+                <button type="button" class="btn btn-primary" onclick="updateScreenShowSubmit({{ screenShow.id }})">수정</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Create Modal -->
+<div class="modal fade" id="createScreenPresetModal" tabindex="-1" aria-labelledby="createScreenPresetModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="createScreenPresetModalLabel">화면 생성</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label for="terminalId" class="col-form-label">단말기ID &#40;자동&#41;</label>
+                    <input type="text" class="form-control" id="createScreenPresetTerminalId" name="terminal_id" disabled>
+                </div>
+                <div class="mb-2">
+                    <label for="name" class="col-form-label">프리셋</label>
+                    <select class="form-select" id="createScreenShowScreenPresetId" name="screen_preset_id">
+                        <option value="" selected disabled>&#40;프리셋을 선택하십시오&#41;</option>
+                        {% for screenPreset in screen_preset_list %}
+                            <option value="{{ screenPreset.id }}">{{ screenPreset.name }}&nbsp;&#40;{{ screenPreset.id }}&#41;</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label for="command" class="col-form-label">활성화</label>
+                    <select class="form-select" id="createScreenShowIsActive" name="is_active">
+                        <option value="true">활성화</option>
+                        <option value="false">비활성화</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label for="order_id" class="col-form-label">정렬 순서</label>
+                    <input type="number" class="form-control" id="createScreenShowOrderId" name="order_id" min="1" value="1">
+                </div>
+                <div class="mb-2">
+                    <label for="desc" class="col-form-label">설명</label>
+                    <input type="text" class="form-control" id="createScreenShowDesc" name="desc">
+                </div>
+                <div class="mb-2">
+                    <label for="value" class="col-form-label">값</label>
+                    <input type="text" class="form-control" id="createScreenShowValue" name="value">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                <button type="button" class="btn btn-primary" onclick="createScreenShowSubmit()">생성</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}
+
+{% block scripts %}
+<script>
+    let selectedTerminalId = '';
+    
+    function updateScreenShowModalShow(screenShowId) {
+        $('#updateScreenShowModal' + screenShowId).modal('show');
+    }
+
+    function updateScreenShowSubmit(screenShowId) {
+        const terminal_id = $('#updateScreenShowTerminalId' + screenShowId).val();
+        const screen_preset_id = $('#updateScreenShowScreenPresetId' + screenShowId).val();
+        const is_active = $('#updateScreenShowIsActive' + screenShowId).val() === 'true';
+        const order_id = $('#updateScreenShowOrderId' + screenShowId).val();
+        const desc = $('#updateScreenShowDesc' + screenShowId).val();
+        const value = $('#updateScreenShowValue' + screenShowId).val();
+        if (!terminal_id || !screen_preset_id || is_active === undefined || is_active === null || !order_id || !desc || !value) {
+            alert('누락된 값을 확인하십시오.');
+            return;
+        }
+        $.ajax({
+            url: '{{ url_for("router.client.manage.terminal_showmanage.update") }}',
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: screenShowId, terminal_id, screen_preset_id, is_active, order_id, desc, value }),
+            success: (response) => {
+                alert(response.message);
+                $('#updateScreenShowModal' + screenShowId).modal('hide');
+                updateScreenShowList();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '수정 중 오류가 발생했습니다.');
+                return;
+            }
+        });
+    }
+
+    function deleteScreenShow(screenShowId) {
+        if (!confirm('해당 화면을 삭제하시겠습니까?')) {
+            return;
+        }
+        $.ajax({
+            url: '{{ url_for("router.client.manage.terminal_showmanage.delete") }}',
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: screenShowId }),
+            success: (response) => {
+                alert(response.message);
+                $('#updateScreenShowModal' + screenShowId).modal('hide');
+                updateScreenShowList();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '삭제 중 오류가 발생했습니다.');
+                return;
+            }
+        });
+    }
+
+    function createScreenPresetModalShow() {
+        if (!selectedTerminalId) {
+            alert('단말기를 선택하십시오.');
+            return;
+        }
+
+        $('#createScreenPresetModal').modal('show');
+    }
+
+    function updateScreenShowList() {
+        $.ajax({
+            url: '{{ url_for("router.client.manage.terminal_showmanage.get_list_by_terminal_id") }}?terminal_id=' + selectedTerminalId,
+            type: 'GET',
+            success: (response) => {
+                $('#screenShowList').html('');
+                response.data.forEach((screenShow) => {
+                    $('#screenShowList').append(`
+                        <tr style="cursor: pointer;" onclick="updateScreenShowModalShow(${screenShow.id})">
+                            <td>${screenShow.id}</td>
+                            <td>${screenShow.terminal_id}</td>
+                            <td>${screenShow.screen_preset_id}</td>
+                            <td>${screenShow.is_active ? '활성화' : '비활성화'}</td>
+                            <td>${screenShow.order_id}</td>
+                            <td>${screenShow.desc}</td>
+                            <td>${screenShow.value}</td>
+                            <td>${screenShow.created_at}</td>
+                        </tr>
+                    `);
+                });
+            },
+            error: (error) => {
+                $('#screenShowList').html('');
+                $('#screenShowList').append(`
+                    <tr>
+                        <td colspan="8" class="text-center">${error?.responseJSON?.message || '조회 중 오류가 발생했습니다.'}</td>
+                    </tr>
+                `);
+            }
+        });
+    }
+
+    function changeTerminal(terminalId) {
+        $('#createScreenPresetTerminalId').val(terminalId);
+        $('#createScreenPresetName').val('');
+        selectedTerminalId = terminalId;
+        updateScreenShowList();
+    }
+
+    function createScreenShowSubmit() {
+        const terminal_id = $('#createScreenPresetTerminalId').val();
+        const screen_preset_id = $('#createScreenShowScreenPresetId').val();
+        const is_active = $('#createScreenShowIsActive').val() === 'true';
+        const order_id = $('#createScreenShowOrderId').val();
+        const desc = $('#createScreenShowDesc').val();
+        const value = $('#createScreenShowValue').val();
+        if (!terminal_id || !screen_preset_id || is_active === undefined || is_active === null || !order_id || !desc || !value) {
+            alert('누락된 값을 확인하십시오.');
+            return;
+        }
+        $.ajax({
+            url: '{{ url_for("router.client.manage.terminal_showmanage.create") }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ terminal_id, screen_preset_id, is_active, order_id, desc, value }),
+            success: (response) => {
+                alert(response.message);
+                $('#createScreenPresetModal').modal('hide');
+                updateScreenShowList();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '생성 중 오류가 발생했습니다.');
+                return;
+            }
+        });
+    }
+</script>
+{% endblock scripts %}

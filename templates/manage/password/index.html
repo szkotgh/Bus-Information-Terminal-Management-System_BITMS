@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1>비밀번호 변경</h1>
+            <span>웹 클라이언트 관리자 비밀번호를 변경합니다</span>
+        </div>
+        <div class="align-self-end">
+            <a href="{{ url_for('router.client.index') }}" class="btn btn-secondary">홈으로</a>
+        </div>
+    </div>
+    <hr>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('router.client.manage.password.update') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <div class="form-group mb-3">
+                            <label for="current_password" class="form-label">현재 비밀번호</label>
+                            <input type="password" class="form-control" name="current_password" id="current_password"
+                                placeholder="현재 비밀번호를 입력하세요" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="new_password" class="form-label">새 비밀번호</label>
+                            <input type="password" class="form-control" name="new_password" id="new_password"
+                                placeholder="새 비밀번호를 입력하세요" required>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="confirm_password" class="form-label">새 비밀번호 확인</label>
+                            <input type="password" class="form-control" name="confirm_password" id="confirm_password"
+                                placeholder="새 비밀번호를 다시 입력하세요" required>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">비밀번호 변경</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const newPassword = document.getElementById('new_password');
+    const confirmPassword = document.getElementById('confirm_password');
+    
+    function validatePasswords() {
+        if (newPassword.value !== confirmPassword.value) {
+            confirmPassword.setCustomValidity('비밀번호가 일치하지 않습니다.');
+        } else {
+            confirmPassword.setCustomValidity('');
+        }
+    }
+    
+    newPassword.addEventListener('input', validatePasswords);
+    confirmPassword.addEventListener('input', validatePasswords);
+});
+</script>
+{% endblock body %}

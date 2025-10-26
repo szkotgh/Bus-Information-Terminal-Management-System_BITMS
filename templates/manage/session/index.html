@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1>BITMS</h1>
+            <span>Bus Information Terminal Management System</span>
+        </div>
+        <div class="align-self-end">
+            <a href="{{ url_for('router.client.index') }}">Home</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="d-flex justify-content-between">
+        <div>
+            <h3>로그인 세션 관리</h3>
+            <span class="text-muted">웹 클라이언트 로그인 세션을 관리합니다.</span>
+        </div>
+        <div>
+            <button type="button" class="btn btn-danger" onclick="deactivateAllSessions()">전체 로그아웃</button>
+        </div>
+    </div>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th scope="col">id</th>
+                <th scope="col">IP</th>
+                <th scope="col">User Agent</th>
+                <th scope="col">Status</th>
+                <th scope="col">Login Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if session_list.success %}
+                {% for session in session_list.data %}
+                    <tr>
+                        <th scope="row" onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.id }}</th>
+                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.ip }}</td>
+                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;"><span class="d-inline-block text-truncate" style="max-width: 300px;">{{ session.user_agent }}</span></td>
+                        <td onclick="deactivateSession({{ session.id }})" style="cursor: pointer;">
+                            {% if session.status == 'active' %}
+                                <span class="text-success">로그인{% if user_session_id == session.session_id %}<span class="text-success">(현재 세션)</span>{% endif %}</span>
+                            {% elif session.status == 'inactive' %}
+                                <span class="text-danger">로그아웃</span>
+                            {% elif session.status == 'blocked' %}
+                                <span class="text-danger">차단됨</span>
+                            {% else %}
+                                <span class="text-muted">알 수 없음</span>
+                            {% endif %}
+                        </td>
+                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.created_at }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">로그인 기록이 없습니다.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if session_list.success %}
+    {% for session in session_list.data %}
+        <div class="modal fade" id="session-modal-{{ session.id }}" tabindex="-1" aria-labelledby="session-modal-label-{{ session.id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                  <div class="modal-header">
+                        <h5 class="modal-title" id="session-modal-label-{{ session.id }}">세션 상세</h5>
+                        <button type="button" class="btn-close" tabindex="-1" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label for="session-id-{{ session.id }}" class="col-form-label">ID</label>
+                            <input type="text" class="form-control" id="session-id-{{ session.id }}" value="{{ session.id }}" disabled tabindex="-1">
+                        </div>
+                        <div class="mb-2">
+                            <label for="session-ip-{{ session.id }}" class="col-form-label">IP</label>
+                            <input type="text" class="form-control" id="session-ip-{{ session.id }}" value="{{ session.ip }}" disabled tabindex="-1">
+                        </div>
+                        <div class="mb-2">
+                            <label for="session-user-agent-{{ session.id }}" class="col-form-label">User Agent</label>
+                            <input type="text" class="form-control" id="session-user-agent-{{ session.id }}" value="{{ session.user_agent }}" disabled tabindex="-1">
+                        </div>
+                        <div class="mb-2">
+                            <label for="session-status-{{ session.id }}" class="col-form-label">Status</label>
+                            <input type="text" class="form-control" id="session-status-{{ session.id }}" value="{{ session.status }}" disabled tabindex="-1">
+                        </div>
+                        <div class="mb-2">
+                            <label for="session-created-at-{{ session.id }}" class="col-form-label">Created At</label>
+                            <input type="text" class="form-control" id="session-created-at-{{ session.id }}" value="{{ session.created_at }}" disabled tabindex="-1">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" onclick="deactivateSession({{ session.id }})">로그아웃</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% endblock body %}
+
+{% block scripts %}
+<script>
+    function deactivateSession(id) {
+        if (!confirm(`${id}번 세션을 비활성화하시겠습니까?`)) return;
+        $.ajax({
+            url: '{{ url_for("router.client.manage.session.deactivate") }}',
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: id }),
+            success: (response) => {
+                alert(response.message);
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error.responseJSON.message || '알 수 없는 오류입니다.');
+            }
+        });
+    }
+
+    function deactivateAllSessions() {
+        if (!confirm('모든 세션을 비활성화하시겠습니까?')) return;
+        $.ajax({
+            url: '{{ url_for("router.client.manage.session.deactivate_all") }}',
+            type: 'DELETE',
+            success: (response) => {
+                alert(response.message);
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error.responseJSON.message || '알 수 없는 오류입니다.');
+            }
+        });
+    }
+
+    function sessionDetailModalShow(id) {
+        $('#session-modal-' + id).modal('show');
+    }
+
+    function sessionDetailModalHide(id) {
+        $('#session-modal-' + id).modal('hide');
+    }
+</script>
+{% endblock scripts %}

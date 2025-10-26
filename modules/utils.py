@@ -7,7 +7,7 @@ import re
 from flask import request
 
 class ResultDTO():
-    def __init__(self, code, message, data=None, success=False):
+    def __init__(self, code, message, data: dict = {}, success: bool = False):
         self.code = code
         self.message = message
         self.data = data
@@ -15,9 +15,9 @@ class ResultDTO():
 
     def to_response(self):
         response = {
-            "code": self.code,
-            "message": self.message,
-            "data": self.data
+            "code":    int(self.code),
+            "message": str(self.message),
+            "data":    self.data
         }
         return response, self.code
 
@@ -35,15 +35,24 @@ def create_session_checksum(ip: str, user_agent: str) -> str:
 
 def create_session_checksum_from_request() -> str:
     ip = get_client_ip()
-    user_agent = request.headers.get('User-Agent', '')
+    user_agent = get_user_agent()
     return create_session_checksum(ip, user_agent)
 
-def get_client_ip(): 
-    user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
+def get_client_ip():
+    user_ip = request.headers.get("Cf-Connecting-Ip", request.remote_addr) # Written based on Cloudflare
     return f'{user_ip}'
+
+def get_user_agent() -> str:
+    return request.headers.get('User-Agent', 'Unknown')
 
 def check_password(password: str, hashed_password: str, salt: str) -> bool:
     return str_to_hash(password + salt) == hashed_password
+
+def extract_bearer_token(authorization: str) -> str:
+    if not authorization: return None
+    if not authorization.startswith('Bearer '): return None
+    
+    return authorization.split(' ')[1]
 
 # Datetime
 def get_current_datetime() -> datetime:
@@ -75,46 +84,11 @@ class RegexResultDTO():
         self.success = success
         self.detail = detail
 
-def is_valid_email(email: str) -> RegexResultDTO:
-    # Step 1: Check email format
-    if not re.fullmatch(r'^[\w\.-]+@[\w\.-]+\.\w+$', email):
-        return RegexResultDTO(
-            success=False,
-            detail="이메일 형식이 유효하지 않습니다."
-        )
-    
-    return RegexResultDTO(success=True, detail="올바른 이메일입니다.")
-
-def is_valid_id(id: str) -> RegexResultDTO:
-    # Step 1: Check only alphanumeric
-    if not re.fullmatch(r'[a-zA-Z0-9]+', id):
-        return RegexResultDTO(
-            success=False,
-            detail="아이디는 영숫자만 사용할 수 있습니다."
-        )
-
-    # Step 2: Check length between 2 and 20
-    if not re.fullmatch(r'.{2,20}', id):
-        return RegexResultDTO(
-            success=False,
-            detail="아이디는 2~20자 사이여야 합니다."
-        )
-
-    return RegexResultDTO(success=True, detail="올바른 아이디입니다.")
-
-def is_valid_password(password: str) -> RegexResultDTO:
-    # Step 1: Check only alphanumeric
-    if not re.fullmatch(r'[a-zA-Z0-9!@#$%^&*()_+]+', password):
-        return RegexResultDTO(
-            success=False,
-            detail="비밀번호는 영숫자와 특수문자만 사용할 수 있습니다."
-        )
-
-    # Step 2: Check length between 8 and 20
-    if not re.fullmatch(r'.{8,20}', password):
-        return RegexResultDTO(
-            success=False,
-            detail="비밀번호는 8~20자 사이여야 합니다."
-        )
-
-    return RegexResultDTO(success=True, detail="올바른 비밀번호입니다.")
+def is_valid_password(password: str) -> bool:
+    if len(password) < 8:
+        return RegexResultDTO(success=False, detail="8자리 이상이어야 합니다.")
+    if re.search(r'\s', password):
+        return RegexResultDTO(success=False, detail="공백은 허용하지 않습니다.")
+    if not re.match(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};:\'",.<>/?]+$', password):
+        return RegexResultDTO(success=False, detail="영숫자, 기호만 사용 가능합니다.")
+    return RegexResultDTO(success=True, detail="비밀번호가 유효합니다.")

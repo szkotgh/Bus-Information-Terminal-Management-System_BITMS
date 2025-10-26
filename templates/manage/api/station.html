@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between">
+        <div>
+            <h1>BITMS</h1>
+            <span>Bus Information Terminal Management System</span>
+        </div>
+        <div class="align-self-end">
+            <a href="{{ url_for('router.client.index') }}">Home</a>
+        </div>
+    </div>
+    <hr>
+
+    <div class="d-flex justify-content-between">
+        <div>
+            <h3>등록역 관리</h3>
+            <span class="text-muted">역을 미리 등록해야 화면 관리에서 표시할 수 있습니다.</span>
+        </div>
+        <div class="align-self-end">
+            <button class="btn btn-sm btn-primary" onclick="showCreateStationModal()">Create Station</button>
+        </div>
+    </div>
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th scope="col">station_id</th>
+                <th scope="col">station_name</th>
+                <th scope="col">mobile_no</th>
+                <th scope="col">region_name</th>
+                <th scope="col">x</th>
+                <th scope="col">y</th>
+                <th scope="col">created_at</th>
+                <th scope="col">지도</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if station_list.success %}
+                {% for station in station_list.data %}
+                    <tr onclick="stationConfigFormShow('{{station.station_id}}')" style="cursor: pointer;">
+                        <th scope="row">{{ station.station_id }}</th>
+                        <td>{{ station.station_name }}</td>
+                        <td>{{ station.mobile_no }}</td>
+                        <td>{{ station.region_name }}</td>
+                        <td>{{ station.x }}</td>
+                        <td>{{ station.y }}</td>
+                        <td>{{ station.created_at }}</td>
+                        <td><a href="https://www.google.com/maps/search/{{station.y}},{{station.x}}" target="_blank"><span class="bi bi-box-arrow-up-right"></span> 지도</a></td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">등록된 역이 없습니다.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+{% if station_list.success %}
+    {% for station in station_list.data %}
+        <div class="modal fade" id="station-config-modal-{{station.station_id}}" tabindex="-1" aria-labelledby="station-config-modalLabel-{{station.station_id}}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">등록역 관리</h5>
+                        <button type="button" class="btn-close" tabindex="-1" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="station-config-form-{{station.station_id}}">
+                            <div class="mb-2">
+                                <label for="station-id-{{station.station_id}}" class="col-form-label">station_id</label>
+                                <input type="text" class="form-control" id="station-id-{{station.station_id}}" value="{{ station.station_id }}">
+                            </div>
+                            <div class="mb-2">
+                                <label for="station-name-{{station.station_id}}" class="col-form-label">station_name</label>
+                                <input type="text" class="form-control" id="station-name-{{station.station_id}}" value="{{ station.station_name }}">
+                            </div>
+                            <div class="mb-2">
+                                <label for="station-auth-token-{{station.station_id}}" class="col-form-label">mobile_no</label>
+                                <input type="text" class="form-control" id="station-auth-token-{{station.station_id}}" value="{{ station.mobile_no }}">
+                            </div>
+                            <div class="mb-2">
+                                <label for="station-region-name-{{station.station_id}}" class="col-form-label">region_name</label>
+                                <input type="text" class="form-control" id="station-region-name-{{station.station_id}}" value="{{ station.region_name }}">
+                            </div>
+                            <div class="mb-2">
+                                <label for="station-x-{{station.station_id}}" class="col-form-label">x</label>
+                                <input type="text" class="form-control" id="station-x-{{station.station_id}}" value="{{ station.x }}">
+                            </div>
+                            <div class="mb-2">
+                                <label for="station-y-{{station.station_id}}" class="col-form-label">y</label>
+                                <input type="text" class="form-control" id="station-y-{{station.station_id}}" value="{{ station.y }}">
+                            </div>
+                            <div class="mb-2">
+                                <label for="created-at-{{station.station_id}}" class="col-form-label">생성일</label>
+                                <input type="text" class="form-control readonly" id="created-at-{{station.station_id}}" value="{{ station.created_at }}" disabled tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" onclick="deleteStation('{{station.station_id}}', '{{station.station_name}}({{station.mobile_no}})')">삭제</button>
+                        <button type="button" class="btn btn-primary" onclick="updateStation('{{station.station_id}}')">수정</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- Create Station Modal -->
+<div class="modal fade" id="createStationModal" tabindex="-1" aria-labelledby="createStationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="createStationModalLabel">역 검색 및 등록</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="form-control" id="stationSearchInput" placeholder="역 이름 검색..">
+        <hr>
+        <div id="stationSearchResult">
+            <p class="text-center">검색 결과가 없습니다.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}
+
+{% block scripts %}
+<script>
+    const stationSearchInput = document.getElementById('stationSearchInput');
+    const stationSearchResult = document.getElementById('stationSearchResult');
+
+    function updateStation(station_id) {
+        const stationName = document.getElementById(`station-name-${station_id}`).value;
+        const mobileNo = document.getElementById(`station-auth-token-${station_id}`).value;
+        const regionName = document.getElementById(`station-region-name-${station_id}`).value;
+        const x = parseFloat(document.getElementById(`station-x-${station_id}`).value);
+        const y = parseFloat(document.getElementById(`station-y-${station_id}`).value);
+
+        if (confirm(`값이 잘못 설정되면 문제가 생길 수 있습니다.\n정보를 수정하시겠습니까?`) === false) {
+            return;
+        }
+        $.ajax({
+            url: `{{ url_for('router.client.manage.station.update') }}`,
+            type: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify({
+                station_id,
+                station_name: stationName,
+                mobile_no: mobileNo,
+                region_name: regionName,
+                x,
+                y
+            }),
+            success: (response) => {
+                alert(response.message);
+                location.reload();
+            },
+            error: (error) => {
+                alert(error.responseJSON?.message || "알 수 없는 오류입니다.");
+            }
+        });
+    }
+
+    function deleteStation(station_id, station_name) {
+        if (confirm(`역과 연결된 정보가 모두 삭제됩니다.\n${station_name}역을 삭제하시겠습니까?`) === false) {
+            return;
+        }
+        $.ajax({
+            url: `{{ url_for('router.client.manage.station.delete') }}`,
+            type: "DELETE",
+            contentType: "application/json",
+            data: JSON.stringify({
+                station_id,
+            }),
+            success: (response) => {
+                alert("역이 성공적으로 삭제되었습니다.");
+                location.reload();
+            },
+            error: (error) => {
+                alert(error.responseJSON?.message || "알 수 없는 오류입니다.");
+            }
+        });
+    }
+    function createStation(station_id, station_name, mobile_no, region_name, x, y) {
+        if (confirm(`${station_name}(${mobile_no}) - ${region_name}\n해당 역을 등록하시겠습니까?`) === false) {
+            return;
+        }
+        $.ajax({
+            url: `{{ url_for('router.client.manage.station.create') }}`,
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({
+                station_id,
+                station_name,
+                mobile_no,
+                region_name,
+                x,
+                y
+            }),
+            success: (response) => {
+                alert("역이 성공적으로 등록되었습니다.");
+                location.reload();
+            },
+            error: (error) => {
+                alert(error.responseJSON?.message || "알 수 없는 오류입니다.");
+            }
+        });
+    }
+
+    function searchStation(keyword) {
+        stationSearchInput.disabled = true;
+        $.ajax({
+            url: `{{ url_for('router.client.manage.station.search_bus_station') }}?keyword=${keyword}`,
+            type: "GET",
+            success: (response) => {
+                const station_list = response.data;
+
+                stationSearchResult.innerHTML = '';
+                station_list.forEach((station) => {
+                    stationSearchResult.innerHTML += `
+                        <div class="d-flex justify-content-between border p-1">
+                            <p class="m-0 align-middle">${station.stationName}(${station.mobileNo},${station.regionName})</p>
+                            <div class="d-flex gap-2">
+                                <a href="https://www.google.com/maps/search/${station.y},${station.x}" target="_blank"><span class="bi bi-box-arrow-up-right"></span> 지도</a>
+                                <button class="btn btn-sm btn-primary" onclick="createStation(${station.stationId}, '${station.stationName}', ${station.mobileNo}, '${station.regionName}', ${station.x}, ${station.y})">선택</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                stationSearchInput.disabled = false;
+            },
+            error: (error) => {
+                stationSearchResult.innerHTML = `<p class="text-center text-danger">${error.responseJSON?.message || "알 수 없는 오류입니다."}</p>`;
+                stationSearchInput.disabled = false;
+            }
+        });
+    }
+
+    function stationConfigFormShow(stationId) {
+        stationSearchInput.value = '';
+        stationSearchResult.innerHTML = '';
+        $('#station-config-modal-' + stationId).modal('show');
+    }
+
+    function stationConfigFormHide(stationId) {
+        $('#station-config-modal-' + stationId).modal('hide');
+    }
+
+    stationSearchInput.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter') {
+            return;
+        }
+        if (event.target.value.length < 2) {
+            return;
+        }
+        searchStation(event.target.value);
+    });
+
+    function showCreateStationModal() {
+        var myModal = new bootstrap.Modal(document.getElementById('createStationModal'), {
+            keyboard: false
+        })
+        myModal.show();
+    }
+</script>
+{% endblock scripts %}

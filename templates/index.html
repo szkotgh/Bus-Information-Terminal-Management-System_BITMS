@@ -9,7 +9,7 @@
             </div>
             <div class="align-self-end">
                 {% if is_login %}
-                    <a href="{{ url_for('router.client.logout') }}">Logout</a>
+                <span>{{ login_ip }}</span> | <a href="{{ url_for('router.client.logout') }}">Logout</a>
                 {% else %}
                     <a href="{{ url_for('router.client.login') }}">Login</a>
                 {% endif %}
@@ -18,9 +18,38 @@
         <hr>
 
         <div class="list-group">
-            <a href="{{ url_for('router.client.terminal.index') }}" class="list-group-item list-group-item-action">
-                Terminal Management
+            <a href="{{ url_for('router.client.manage.terminal.index') }}" class="list-group-item list-group-item-action">
+                단말기 관리
             </a>
+            <a href="{{ url_for('router.client.manage.terminal_showmanage.index') }}" class="list-group-item list-group-item-action">
+                단말기 화면 관리
+            </a>
+            <a href="{{ url_for('router.client.manage.screen_preset.index') }}" class="list-group-item list-group-item-action">
+                &nbsp;&nbsp;&nbsp;&nbsp;&gt;&nbsp;&nbsp;단말기 화면 프리셋 설정
+            </a>
+            <a href="{{ url_for('router.client.manage.station.index') }}" class="list-group-item list-group-item-action">
+                &nbsp;&nbsp;&nbsp;&nbsp;&gt;&nbsp;&nbsp;등록역 관리
+            </a>
+            <a href="{{ url_for('router.client.manage.weather.index') }}" class="list-group-item list-group-item-action">
+                &nbsp;&nbsp;&nbsp;&nbsp;&gt;&nbsp;&nbsp;날씨 관리
+            </a>
+            <a href="{{ url_for('router.client.manage.everline.index') }}" class="list-group-item list-group-item-action">
+                &nbsp;&nbsp;&nbsp;&nbsp;&gt;&nbsp;&nbsp;에버라인 관리
+            </a>
+            <a href="{{ url_for('router.client.manage.terminal_status.index') }}" class="list-group-item list-group-item-action">
+                단말기 상태 확인
+            </a>
+            <a href="{{ url_for('router.client.manage.terminal_livescreen.index') }}" class="list-group-item list-group-item-action">
+                단말기 화면 열람
+            </a>
+            <a href="{{ url_for('router.client.manage.session.index') }}" class="list-group-item list-group-item-action">
+                로그인 세션 관리
+            </a>
+            <a href="{{ url_for('router.client.manage.password.index') }}" class="list-group-item list-group-item-action">
+                비밀번호 변경
+            </a>
+            <a href="https://www.gbis.go.kr/gbis2014/publicService.action?cmd=mBusRoute" target="_blank" class="list-group-item list-group-item-action">
+                <span class="bi bi-box-arrow-up-right"></span>&nbsp;&nbsp;경기버스정보 메뉴얼
         </div>
         
     </div>

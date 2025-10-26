@@ -15,7 +15,8 @@
     
     <div class="d-flex justify-content-between">
         <div>
-            <h3>Terminal Management</h3>
+            <h3>단말기 관리</h3>
+            <span class="text-muted">BIT를 관리합니다.</span>
         </div>
         <div class="align-self-end">
             <button class="btn btn-primary" onclick="createTerminal()">Create Terminal</button>
@@ -42,7 +43,7 @@
                     <th scope="row">{{ terminal.id }}</th>
                     <td>{{ terminal.name }}</td>
                     <td>{{ terminal.auth_token }}</td>
-                    <td>{{ terminal.status }}</td>
+                    <td>{% if terminal.status == 'active' %}활성화{% else %}비활성화{% endif %}</td>
                     <td>{{ terminal.created_at }}</td>
                 </tr>
                 {% endfor %}
@@ -73,13 +74,16 @@
                             </div>
                             <div class="mb-2">
                                 <label for="terminal-auth-token-{{terminal.id}}" class="col-form-label">인증 토큰</label>
-                                <input type="text" class="form-control" id="terminal-auth-token-{{terminal.id}}" value="{{ terminal.auth_token }}" disabled tabindex="-1">
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="form-control" id="terminal-auth-token-{{terminal.id}}" value="{{ terminal.auth_token }}" disabled tabindex="-1">
+                                    <button type="button" class="btn btn-primary flex-shrink-0" style="min-width: 60px;" onclick="terminalConfigFormUpdateAuthToken('{{terminal.id}}')">토큰 갱신</button>
+                                </div>
                             </div>
                             <div class="mb-2">
                                 <label for="terminal-status-{{terminal.id}}" class="col-form-label">상태</label>
                                 <select class="form-select" id="terminal-status-{{terminal.id}}">
-                                    <option value="active" {% if terminal.status == 'active' %}selected{% endif %}>활성</option>
-                                    <option value="deactive" {% if terminal.status == 'deactive' %}selected{% endif %}>비활성</option>
+                                    <option value="active" {% if terminal.status == 'active' %}selected{% endif %}>활성화</option>
+                                    <option value="inactive" {% if terminal.status == 'inactive' %}selected{% endif %}>비활성화</option>
                                 </select>
                             </div>
                             <div class="mb-2">
@@ -89,7 +93,6 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" onclick="terminalConfigFormUpdateAuthToken('{{terminal.id}}')">인증토큰 갱신</button>
                         <button type="button" class="btn btn-danger" onclick="deleteTerminal('{{terminal.id}}')">삭제</button>
                         <button type="button" class="btn btn-primary" onclick="terminalConfigFormSubmit('{{terminal.id}}')">수정</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
@@ -107,7 +110,7 @@
         const terminalName = prompt("생성할 단말기 이름을 입력하세요:");
         if (terminalName) {
             $.ajax({
-                url: '{{ url_for("router.client.terminal.create") }}',
+                url: '{{ url_for("router.client.manage.terminal.create") }}',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ name: terminalName }),
@@ -137,8 +140,8 @@
             status: $('#terminal-status-' + terminalId).val()
         };
         $.ajax({
-            url: '{{ url_for("router.client.terminal.update") }}',
-            type: 'POST',
+            url: '{{ url_for("router.client.manage.terminal.update") }}',
+            type: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify(requestData),
             success: (response) => {
@@ -153,9 +156,9 @@
     }
 
     function terminalConfigFormUpdateAuthToken(terminalId) {
-        if (!confirm(`${terminalId} 단말기의 인증 토큰을 업데이트하시겠습니까?`)) return;
+        if (!confirm(`${terminalId}번 단말기의 인증 토큰을 업데이트하시겠습니까?`)) return;
         $.ajax({
-            url: '{{ url_for("router.client.terminal.update_auth_token") }}',
+            url: '{{ url_for("router.client.manage.terminal.update_auth_token") }}',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({ id: terminalId }),
@@ -174,7 +177,7 @@
         if (!confirm(`${terminalId} 단말기를 삭제하시겠습니까?`)) return;
 
         $.ajax({
-            url: '{{ url_for("router.client.terminal.delete") }}',
+            url: '{{ url_for("router.client.manage.terminal.delete") }}',
             type: 'DELETE',
             contentType: 'application/json',
             data: JSON.stringify({ id: terminalId }),
