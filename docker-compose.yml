@@ -1,0 +1,20 @@
+services:
+  bitms:
+    build: .
+    container_name: bitms-web
+    ports:
+      - "49124:49124"
+    volumes:
+      - ./db:/app/db
+      - ./.env:/app/.env:ro
+    environment:
+      - HOST_IP=0.0.0.0
+      - HOST_PORT=49124
+      - SECRET_KEY=a31944d2ce8a6fa37cba756eda8149936cd477c7b0ab76c902a885ee7310527bd5ae549491dbcaac4707e78f9b493e8e
+    restart: unless-stopped
+    networks:
+      - bitms-network
+
+networks:
+  bitms-network:
+    driver: bridge

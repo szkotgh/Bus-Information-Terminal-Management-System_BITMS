@@ -1,0 +1,7 @@
+Flask==3.1.2
+Flask-SocketIO==5.5.1
+Flask-WTF==1.2.2
+python-dotenv==1.1.1
+bcrypt==3.2.0
+requests==2.32.5
+Werkzeug==3.1.3
