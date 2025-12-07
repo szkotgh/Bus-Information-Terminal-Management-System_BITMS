@@ -23,6 +23,7 @@
 
 {% block body %}
 <div class="container">
+    {% if is_login %}
     <div class="list-group">
             <a href="{{ url_for('router.client.manage.terminal.index') }}" class="list-group-item list-group-item-action">
                 단말기 관리
@@ -61,5 +62,11 @@
                 <span class="bi bi-box-arrow-up-right"></span>&nbsp;&nbsp;경기버스정보 메뉴얼
             </a>
     </div>
+    {% else %}
+    <div class="alert alert-warning mt-5" role="alert">
+        <h4>로그인이 필요합니다.</h4>
+        <span>시스템을 사용하려면 로그인하십시오.</span>
+    </div>
+    {% endif %}
 </div>
 {% endblock body %}
