@@ -1,8 +1,9 @@
 from flask import Blueprint
-from . import terminal, station, terminal_livescreen, session, terminal_status, terminal_showmanage, weather, everline, screen_preset, password
+from . import terminal, station, terminal_livescreen, session, terminal_status, terminal_showmanage, weather, everline, screen_preset, password, audio_files
 
 bp = Blueprint('manage', __name__, url_prefix='/manage')
 bp.register_blueprint(screen_preset.bp)
+bp.register_blueprint(audio_files.bp)
 bp.register_blueprint(session.bp)
 bp.register_blueprint(terminal.bp)
 bp.register_blueprint(terminal_livescreen.bp)

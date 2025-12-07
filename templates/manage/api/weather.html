@@ -1,21 +1,11 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between">
-        <div>
-            <h1>BITMS</h1>
-            <span>Bus Information Terminal Management System</span>
-        </div>
-        <div class="align-self-end">
-            <a href="{{ url_for('router.client.index') }}">Home</a>
-        </div>
-    </div>
-    <hr>
-
+<div class="container">
     <div class="d-flex justify-content-between">
         <div>
             <h3>날씨 API</h3>
+            <span class="text-muted">장치에서 필요시 자동 요청되어 사용됩니다.</span>
             <a href="https://openweathermap.org/current" target="_blank">Current Weather Doc</a>
             <a href="https://openweathermap.org/api/air-pollution" target="_blank">Air Pollution Doc</a>
         </div>

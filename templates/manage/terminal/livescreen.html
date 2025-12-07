@@ -1,18 +1,7 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between">
-        <div>
-            <h1>BITMS</h1>
-            <span>Bus Information Terminal Management System</span>
-        </div>
-        <div class="align-self-end">
-            <a href="{{ url_for('router.client.index') }}">Home</a>
-        </div>
-    </div>
-    <hr>
-    
+<div class="container">
     <div class="d-flex justify-content-between">
         <div>
             <h3>단말기 화면 열람</h3>
@@ -24,7 +13,7 @@
         <select class="form-select" aria-label="Default select example" onchange="changeTerminal(this.value)">
             <option value="" selected disabled>Select Terminal</option>
             {% for terminal in terminal_list.data %}
-                <option value="{{ terminal.id }}">{{ terminal.name }}</option>
+                <option value="{{ terminal.id }}" {% if terminal.status != 'active' %}disabled{% endif %}>{{ terminal.name }}{% if terminal.status != 'active' %}&#40;사용불가&#41;{% endif %}</option>
             {% endfor %}
         </select>
     {% else %}
@@ -128,7 +117,7 @@
             refreshTerminalLiveScreenInfo();
             screen.alt = '표시할 화면이 없습니다.';
             screen.src = '';
-        }, 500);
+        }, 100);
         socket.emit('leave_terminal', selectedTerminalId || null);
 
         selectedTerminalId = terminalId;

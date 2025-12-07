@@ -49,10 +49,11 @@ def update():
     terminal_id = request.json.get('id')
     terminal_name = request.json.get('name')
     terminal_status = request.json.get('status')
-    if not terminal_id or not terminal_name or not terminal_status:
+    terminal_manager = request.json.get('manager')
+    if not terminal_id or not terminal_name or not terminal_status or not terminal_manager:
         return utils.ResultDTO(code=400, message='누락된 값을 확인하십시오.').to_response()
     
-    update_result = db_terminal.update_terminal(terminal_id, terminal_name, terminal_status)
+    update_result = db_terminal.update_terminal(terminal_id, terminal_name, terminal_status, terminal_manager)
     if not update_result.success:
         return utils.ResultDTO(code=400, message=f"업데이트에 실패했습니다: {update_result.message}").to_response()
     return utils.ResultDTO(code=200, message=update_result.message).to_response()

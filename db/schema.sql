@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS login_session (
     user_agent TEXT NOT NULL,
     checksum TEXT NOT NULL,
     status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours'))
 );
 
 CREATE TABLE IF NOT EXISTS terminal (
@@ -13,7 +13,16 @@ CREATE TABLE IF NOT EXISTS terminal (
     name TEXT NOT NULL,
     auth_token TEXT UNIQUE NOT NULL,
     status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    manager TEXT DEFAULT '지정안됨',
+    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours'))
+);
+
+CREATE TABLE IF NOT EXISTS terminal_screen_preset (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    command TEXT NOT NULL UNIQUE,
+    value_desc TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours'))
 );
 
 CREATE TABLE IF NOT EXISTS terminal_screen_show (
@@ -24,17 +33,9 @@ CREATE TABLE IF NOT EXISTS terminal_screen_show (
     order_id INTEGER NOT NULL,
     desc TEXT DEFAULT '',
     value TEXT DEFAULT '',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours')),
     FOREIGN KEY (terminal_id) REFERENCES terminal(id) ON DELETE CASCADE,
     FOREIGN KEY (screen_preset_id) REFERENCES terminal_screen_preset(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS terminal_screen_preset (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    command TEXT NOT NULL UNIQUE,
-    value_desc TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CREATE TABLE IF NOT EXISTS terminal_status (
@@ -53,7 +54,19 @@ CREATE TABLE IF NOT EXISTS station (
     region_name TEXT NOT NULL,
     x REAL NOT NULL,
     y REAL NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours'))
+);
+
+CREATE TABLE IF NOT EXISTS audio_files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    uploader_sid INTEGER NOT NULL,
+    file_name TEXT NOT NULL,
+    file_description TEXT,
+    file_org_name TEXT NOT NULL,
+    file_path TEXT UNIQUE NOT NULL,
+    file_size INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours')),
+    FOREIGN KEY (uploader_sid) REFERENCES login_session(id)
 );
 
 CREATE TABLE IF NOT EXISTS system_config (
@@ -61,6 +74,6 @@ CREATE TABLE IF NOT EXISTS system_config (
     config_key TEXT UNIQUE NOT NULL,
     config_value TEXT NOT NULL,
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT (datetime('now', '+9 hours')),
+    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours'))
 );

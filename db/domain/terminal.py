@@ -43,8 +43,8 @@ def get_terminal_by_auth_token(auth_token: str) -> db.DBResultDTO:
         terminal = cursor.fetchone()
         db.close_db_connection(conn)
         if not terminal:
-            return db.DBResultDTO(success=False, message="invalid auth token.")
-        return db.DBResultDTO(success=True, message="success", data=terminal)
+            return db.DBResultDTO(success=False, message="올바르지 않은 인증 토큰입니다.")
+        return db.DBResultDTO(success=True, message="성공적으로 조회했습니다.", data=terminal)
     except Exception as e:
         return db.DBResultDTO(success=False, message=str(e))
 
@@ -73,7 +73,7 @@ def delete_terminal(terminal_id: int) -> db.DBResultDTO:
     except Exception as e:
         return db.DBResultDTO(success=False, message=str(e))
 
-def update_terminal(terminal_id: int, terminal_name: str, terminal_status: str) -> db.DBResultDTO:
+def update_terminal(terminal_id: int, terminal_name: str, terminal_status: str, terminal_manager: str) -> db.DBResultDTO:
     if terminal_status not in constants.TERMINAL_STATUS_LIST:
         return utils.ResultDTO(code=400, message='유효하지 않은 상태입니다.')
     
@@ -84,7 +84,7 @@ def update_terminal(terminal_id: int, terminal_name: str, terminal_status: str) 
     try:
         conn = db.get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE terminal SET name = ?, status = ? WHERE id = ?", (terminal_name, terminal_status, terminal_result.data['id']))
+        cursor.execute("UPDATE terminal SET name = ?, status = ?, manager = ? WHERE id = ?", (terminal_name, terminal_status, terminal_manager, terminal_result.data['id']))
         conn.commit()
         db.close_db_connection(conn)
         return db.DBResultDTO(success=True, message="업데이트 되었습니다.")

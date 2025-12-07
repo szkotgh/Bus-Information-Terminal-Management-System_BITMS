@@ -34,7 +34,7 @@ def update_kv(config_key: str, config_value: str, description: str = None) -> db
     try:
         conn = db.get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("UPDATE system_config SET config_value = ?, description = ?, updated_at = CURRENT_TIMESTAMP WHERE config_key = ?", (config_value, description, config_key))
+        cursor.execute("UPDATE system_config SET config_value = ?, description = ?, updated_at = datetime('now', '+9 hours') WHERE config_key = ?", (config_value, description, config_key))
         conn.commit()
         db.close_db_connection(conn)
         return db.DBResultDTO(success=True, message=f"성공적으로 저장되었습니다.")
@@ -53,13 +53,7 @@ def get_all_configs() -> db.DBResultDTO:
         
         configs = []
         for result in results:
-            configs.append({
-                'config_key': result[0],
-                'config_value': result[1],
-                'description': result[2],
-                'created_at': result[3],
-                'updated_at': result[4]
-            })
+            configs.append(dict(result))
         
         return db.DBResultDTO(success=True, message="성공적으로 조회되었습니다.", data=configs)
         

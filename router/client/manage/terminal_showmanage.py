@@ -26,8 +26,9 @@ def get_list_by_terminal_id():
     screen_show_list_result = db_screen_show.get_screen_show_by_terminal_id(terminal_id)
     if not screen_show_list_result.success:
         return utils.ResultDTO(code=400, message=f"조회에 실패했습니다: {screen_show_list_result.message}").to_response()
+    
     return utils.ResultDTO(code=200, message=screen_show_list_result.message, data=screen_show_list_result.data).to_response()
-
+    
 @bp.route('', methods=['POST'])
 @login_required
 def create():

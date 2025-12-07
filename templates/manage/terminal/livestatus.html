@@ -1,23 +1,12 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between">
-        <div>
-            <h1>BITMS</h1>
-            <span>Bus Information Terminal Management System</span>
-        </div>
-        <div class="align-self-end">
-            <a href="{{ url_for('router.client.index') }}">Home</a>
-        </div>
-    </div>
-    <hr>
-    <style>
-        #cpu-usages-list { white-space: nowrap; }
-        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-        .cpu-core { display: inline-block; width: 88px; text-align: left; }
-    </style>
-    
+<style>
+    #cpu-usages-list { white-space: nowrap; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .cpu-core { display: inline-block; width: 88px; text-align: left; }
+</style>
+<div class="container">
     <div class="d-flex justify-content-between mb-3">
         <div>
             <h3>단말기 상태 확인</h3>
@@ -30,7 +19,7 @@
         <select class="form-select" aria-label="Default select example" onchange="changeTerminal(this.value)">
             <option value="" selected disabled>단말기를 선택하세요</option>
             {% for terminal in terminal_list.data %}
-                <option value="{{ terminal.id }}">{{ terminal.name }}</option>
+                <option value="{{ terminal.id }}" {% if terminal.status != 'active' %}disabled{% endif %}>{{ terminal.name }}{% if terminal.status != 'active' %}&#40;사용불가&#41;{% endif %}</option>
             {% endfor %}
         </select>
     {% else %}
@@ -52,16 +41,22 @@
     <div id="device-status-display" class="bg-light p-2 border rounded">
         <div class="row">
             <div class="col-md-6">
-                <h6 class="mb-1">시스템 정보</h6>
-                <div id="system-info">
+                <h5 class="mb-1">&gt;&nbsp;시스템 정보</h5>
+                <div id="system-info" class="mb-3">
                     <p class="mb-1 small">시스템 시작: <span id="start-datetime">-</span></p>
                     <p class="mb-1 small">CPU 사용량: <span id="cpu-usages-list" class="mono">-</span> &#40;<span id="cpu-usage-avg">-</span>&#37;&#41;</p>
+                    <div class="progress mb-1" style="height: 2px;">
+                        <div class="progress-bar" id="cpu-usage-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
                     <p class="mb-1 small">CPU 온도: <span id="cpu-temp">-</span>°C</p>
+                    <div class="progress" style="height: 2px;">
+                        <div class="progress-bar" id="cpu-temp-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <h6 class="mb-1">네트워크 정보</h6>
-                <div id="network-info">
+                <h5 class="mb-1">&gt;&nbsp;네트워크 정보</h5>
+                <div id="network-info" class="mb-3">
                     <p class="mb-1 small">연결 타입: <span id="connection-type">-</span>&nbsp;<button class="btn btn-secondary btn-sm me-1" id="internet-test-button" onclick="sendCommandCheck()" disabled>인터넷 테스트</button></p>
                     <p class="mb-1 small">SSID/게이트웨이: <span id="ssid-gateway">-</span></p>
                     <p class="mb-1 small">IP 주소: <span id="ip-address">-</span></p>
@@ -70,33 +65,37 @@
         </div>
         <div class="row mt-2">
             <div class="col-md-6">
-                <h6 class="mb-1">디스크 정보</h6>
-                <div id="disk-info">
-                    <p class="mb-1 small">전체 디스크: <span id="total-disk">-</span></p>
-                    <p class="mb-1 small">사용량: <span id="used-disk">-</span>&#40;<span id="disk-usage">-</span>&#37;&#41;</p>
+                <h5 class="mb-1">&gt;&nbsp;디스크 정보</h5>
+                <div id="disk-info" class="mb-3">
+                    <p class="mb-1 small">사용량: <span id="used-disk">-</span>&nbsp;/&nbsp;<span id="total-disk">-</span> &#40;<span id="disk-usage">-</span>&#37;&#41;</p>
+                    <div class="progress" style="height: 2px;">
+                        <div class="progress-bar" id="disk-usage-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <h6 class="mb-1">메모리 정보</h6>
-                <div id="memory-info">
-                    <p class="mb-1 small">전체 메모리: <span id="total-memory">-</span></p>
-                    <p class="mb-1 small">사용량: <span id="used-memory">-</span>&#40;<span id="memory-usage">-</span>&#37;&#41;</p>
+                <h5 class="mb-1">&gt;&nbsp;메모리 정보</h5>
+                <div id="memory-info" class="mb-3">
+                    <p class="mb-1 small">사용량: <span id="used-memory">-</span>&nbsp;/&nbsp;<span id="total-memory">-</span> &#40;<span id="memory-usage">-</span>&#37;&#41;</p>
+                    <div class="progress" style="height: 2px;">
+                        <div class="progress-bar" id="memory-usage-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="row mt-2">
             <div class="col-md-6">
-                <h6 class="mb-1">서비스 정보</h6>
-                <div id="service-info">
+                <h5 class="mb-1">&gt;&nbsp;서비스 정보</h5>
+                <div id="service-info" class="mb-3">
                     <!-- service info -->
                 </div>
             </div>
             <div class="col-md-6">
-                <h6 class="mb-0">오디오 정보</h6>
+                <h5 class="mb-0">&gt;&nbsp;오디오 정보</h5>
                 <span class="text-muted small">BIT 프로그램에서 출력되는 오디오는 별개로 설정됩니다.</span>
-                <div class="mt-2" id="audio-info">
+                <div class="mt-2" id="audio-info" class="mb-3">
                     <p class="mb-1 small">상태: <span id="audio-status">-</span></p>
-                    <p class="mb-1 small">재생정보: <span id="audio-current">-</span></p>
+                    <p class="mb-1 small">재생정보: <span id="audio-current">-</span>&nbsp;<button class="btn btn-sm btn-secondary" id="audio-play-stop-button" onclick="sendCommand('playstop')" disabled>재생중지</button></p>
                     <p class="mb-1 small">볼륨: <span id="audio-volume">-</span>&#37;&nbsp;<button class="btn btn-sm btn-secondary" id="audio-volume-button" onclick="sendCommandVolume()" disabled>볼륨 조절</button></p>
                 </div>
             </div>
@@ -104,7 +103,7 @@
         <div class="row mt-2">
             <div class="col-12">
                 <div class="d-flex align-items-center">
-                    <h6 class="mb-0 me-2">장치 제어</h6>
+                    <h5 class="mb-0 me-2">장치 제어</h5>
                     <small class="text-muted">선택된 터미널: <span id="selected-terminal-name">없음</span></small>
                 </div>
                 <div id="device-control" class="mt-1">
@@ -137,11 +136,43 @@
     const tdsLabel = document.getElementById('tds-label');
     const internetTestButton = document.getElementById('internet-test-button');
     const audioVolumeButton = document.getElementById('audio-volume-button');
+    const audioPlayStopButton = document.getElementById('audio-play-stop-button');
     
     const socket = io('/terminal');
 
     function setStatusLabelText(status) {
         statusLabel.textContent = status;
+    }
+
+    function updateProgressBarColor(progressBar, value) {
+        progressBar.classList.remove('bg-info', 'bg-primary', 'bg-warning', 'bg-danger');
+        
+        if (value < 20) {
+            progressBar.classList.add('bg-info');
+            return
+        }
+
+        if (value < 35) {
+            progressBar.classList.add('bg-primary');
+            return
+        }
+        
+        if (value < 70) {
+            progressBar.classList.add('bg-warning');
+            return
+        }
+        
+        progressBar.classList.add('bg-danger');
+        return
+    }
+
+    function updateProgressBar(progressBarId, value) {
+        const progressBar = document.getElementById(progressBarId);
+        if (progressBar) {
+            progressBar.style.width = value + '%';
+            progressBar.setAttribute('aria-valuenow', value);
+            updateProgressBarColor(progressBar, value);
+        }
     }
 
 
@@ -180,16 +211,20 @@
         document.getElementById('start-datetime').textContent = '-';
         document.getElementById('cpu-usage').textContent = '-';
         document.getElementById('cpu-temp').textContent = '-';
+        updateProgressBar('cpu-usage-bar', 0);
+        updateProgressBar('cpu-temp-bar', 0);
         
         // memory info
         document.getElementById('total-memory').textContent = '-';
         document.getElementById('used-memory').textContent = '-';
         document.getElementById('memory-usage').textContent = '-';
+        updateProgressBar('memory-usage-bar', 0);
         
         // disk info
         document.getElementById('total-disk').textContent = '-';
         document.getElementById('used-disk').textContent = '-';
         document.getElementById('disk-usage').textContent = '-';
+        updateProgressBar('disk-usage-bar', 0);
         
         // network info
         document.getElementById('connection-type').textContent = '-';
@@ -206,6 +241,7 @@
 
         audioVolumeButton.disabled = true;
         internetTestButton.disabled = true;
+        audioPlayStopButton.disabled = true;
     }
 
     function updateDeviceStatus(status) {
@@ -222,21 +258,33 @@
         document.getElementById('cpu-usages-list').innerHTML = cpuUsages.length 
             ? cpuUsages.map((v, i) => `<span class=\"cpu-core\">C${i+1}: ${v.toFixed(1)}%</span>`).join('')
             : '-';
-        document.getElementById('cpu-temp').textContent = hardwareInfo.cpu_temp !== undefined ? hardwareInfo.cpu_temp.toFixed(1) : '-';
+        if (cpuAvg !== null) {
+            updateProgressBar('cpu-usage-bar', cpuAvg);
+        }
+        
+        const cpuTemp = hardwareInfo.cpu_temp !== undefined ? hardwareInfo.cpu_temp : null;
+        document.getElementById('cpu-temp').textContent = cpuTemp !== null ? cpuTemp.toFixed(1) : '-';
+        if (cpuTemp !== null) {
+            updateProgressBar('cpu-temp-bar', cpuTemp);
+        }
         
         // memory info
         const totalMemory = hardwareInfo.total_memory || 0;
         const usedMemory = hardwareInfo.used_memory || 0;
+        const memoryUsagePercent = totalMemory > 0 ? ((usedMemory / totalMemory) * 100) : 0;
         document.getElementById('total-memory').textContent = filesize(totalMemory);
         document.getElementById('used-memory').textContent = filesize(usedMemory);
-        document.getElementById('memory-usage').textContent = ((usedMemory / totalMemory) * 100).toFixed(1);
+        document.getElementById('memory-usage').textContent = memoryUsagePercent.toFixed(1);
+        updateProgressBar('memory-usage-bar', memoryUsagePercent);
         
         // disk info
         const totalDisk = hardwareInfo.total_disk || 0;
         const usedDisk = hardwareInfo.used_disk || 0;
+        const diskUsagePercent = totalDisk > 0 ? ((usedDisk / totalDisk) * 100) : 0;
         document.getElementById('total-disk').textContent = filesize(totalDisk);
         document.getElementById('used-disk').textContent = filesize(usedDisk);
-        document.getElementById('disk-usage').textContent = ((usedDisk / totalDisk) * 100).toFixed(1);
+        document.getElementById('disk-usage').textContent = diskUsagePercent.toFixed(1);
+        updateProgressBar('disk-usage-bar', diskUsagePercent);
         
         // network info
         document.getElementById('connection-type').textContent = networkInfo.connection_type || '-';
@@ -253,6 +301,7 @@
 
         internetTestButton.disabled = networkInfo.connection_type ? false : true;
         audioVolumeButton.disabled = audioInfo.status ? false : true;
+        audioPlayStopButton.disabled = audioInfo.status ? false : true;
     }
 
     function refreshTerminalStatusInfo() {
@@ -324,9 +373,15 @@
             document.getElementById('audio-current').textContent = '-';
             document.getElementById('audio-volume').textContent = '-';
 
+            updateProgressBar('cpu-usage-bar', 0);
+            updateProgressBar('cpu-temp-bar', 0);
+            updateProgressBar('memory-usage-bar', 0);
+            updateProgressBar('disk-usage-bar', 0);
+
             internetTestButton.disabled = true;
             audioVolumeButton.disabled = true;
-        }, 500);
+            audioPlayStopButton.disabled = true;
+        }, 100);
         socket.emit('leave_terminal', selectedTerminalId || null);
 
         selectedTerminalId = terminalId;

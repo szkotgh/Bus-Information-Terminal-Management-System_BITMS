@@ -3,6 +3,13 @@ import db.domain.terminal as db_terminal
 import db.domain.screen_preset as db_screen_preset
 import modules.constants as constants
 
+def _add_preset_info_to_screen_show(screen_show):
+    screen_show_dict = dict(screen_show) if not isinstance(screen_show, dict) else screen_show
+    preset_info_result = db_screen_preset.get_screen_preset_by_id(screen_show_dict['screen_preset_id'])
+    if preset_info_result.success and preset_info_result.data:
+        screen_show_dict['preset_info'] = dict(preset_info_result.data)
+    return screen_show_dict
+
 def create_screen_show(terminal_id: int, screen_preset_id: int, is_active: bool, order_id: int, desc: str, value: str) -> db.DBResultDTO:
     terminal_result = db_terminal.get_terminal_by_id(terminal_id)
     if not terminal_result.success:
@@ -30,7 +37,13 @@ def get_screen_show_list() -> db.DBResultDTO:
         cursor.execute("SELECT * FROM terminal_screen_show")
         screen_show_rows = cursor.fetchall()
         db.close_db_connection(conn)
-        return db.DBResultDTO(success=True, message="성공적으로 조회되었습니다.", data=screen_show_rows)
+        
+        screen_show_list = []
+        for row in screen_show_rows:
+            screen_show_dict = _add_preset_info_to_screen_show(row)
+            screen_show_list.append(screen_show_dict)
+        
+        return db.DBResultDTO(success=True, message="성공적으로 조회되었습니다.", data=screen_show_list)
     except Exception as e:
         return db.DBResultDTO(success=False, message=str(e))
 
@@ -43,7 +56,9 @@ def get_screen_show_by_id(screen_show_id: int) -> db.DBResultDTO:
         db.close_db_connection(conn)
         if not screen_show:
             return db.DBResultDTO(success=False, message="올바르지 않은 화면 ID입니다.")
-        return db.DBResultDTO(success=True, message="성공적으로 조회되었습니다.", data=screen_show)
+        
+        screen_show_dict = _add_preset_info_to_screen_show(screen_show)
+        return db.DBResultDTO(success=True, message="성공적으로 조회되었습니다.", data=screen_show_dict)
     except Exception as e:
         return db.DBResultDTO(success=False, message=str(e))
 
@@ -62,7 +77,8 @@ def get_screen_show_by_terminal_id(terminal_id: int) -> db.DBResultDTO:
         
         screen_show_list = []
         for row in screen_show_rows:
-            screen_show_list.append(dict(row))
+            screen_show_dict = _add_preset_info_to_screen_show(row)
+            screen_show_list.append(screen_show_dict)
         
         db.close_db_connection(conn)
         return db.DBResultDTO(success=True, message="성공적으로 조회되었습니다.", data=screen_show_list)

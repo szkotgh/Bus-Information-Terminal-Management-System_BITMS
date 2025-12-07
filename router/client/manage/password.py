@@ -2,6 +2,7 @@ from flask import Blueprint, request, render_template, flash, redirect, url_for
 from middleware.auth import login_required
 import modules.utils as utils
 import db.domain.system_config as db_config
+import db.domain.session as db_session
 import bcrypt
 
 bp = Blueprint('password', __name__, url_prefix='/manage/password')
@@ -42,12 +43,13 @@ def update():
         flash('현재 비밀번호가 올바르지 않습니다.', 'error')
         return render_template('manage/password/index.html')
     
+    # Update Password
     new_password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
     save_result = db_config.update_kv('admin_password', new_password_hash, 'login password for web admin client')
     if not save_result.success:
         flash(f'비밀번호 변경 중 오류가 발생했습니다: {save_result.message}', 'error')
         return render_template('manage/password/index.html')
     
     flash('비밀번호가 성공적으로 변경되었습니다.', 'success')
+    db_session.deactivate_all_sessions()
     return redirect(url_for('router.client.index'))

@@ -1,18 +1,7 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between">
-        <div>
-            <h1>BITMS</h1>
-            <span>Bus Information Terminal Management System</span>
-        </div>
-        <div class="align-self-end">
-            <a href="{{ url_for('router.client.index') }}">Home</a>
-        </div>
-    </div>
-    <hr>
-    
+<div class="container">
     <div class="d-flex justify-content-between">
         <div>
             <h3>단말기 관리</h3>
@@ -29,6 +18,7 @@
                 <th scope="col">Name</th>
                 <th scope="col">Auth Token</th>
                 <th scope="col">Status</th>
+                <th scope="col">Manager</th>
                 <th scope="col">Create</th>
             </tr>
         </thead>
@@ -44,7 +34,8 @@
                     <td>{{ terminal.name }}</td>
                     <td>{{ terminal.auth_token }}</td>
                     <td>{% if terminal.status == 'active' %}활성화{% else %}비활성화{% endif %}</td>
-                    <td>{{ terminal.created_at }}</td>
+                    <td>{{ terminal.manager }}</td>
+                    <td>{{ terminal.created_at[:10] }}</td>
                 </tr>
                 {% endfor %}
             {% endif %}
@@ -85,6 +76,10 @@
                                     <option value="active" {% if terminal.status == 'active' %}selected{% endif %}>활성화</option>
                                     <option value="inactive" {% if terminal.status == 'inactive' %}selected{% endif %}>비활성화</option>
                                 </select>
+                            </div>
+                            <div class="mb-2">
+                                <label for="terminal-manager-{{terminal.id}}" class="col-form-label">담당자</label>
+                                <input type="text" class="form-control" id="terminal-manager-{{terminal.id}}" value="{{ terminal.manager }}">
                             </div>
                             <div class="mb-2">
                                 <label for="created-at-{{terminal.id}}" class="col-form-label">생성일</label>
@@ -137,7 +132,8 @@
         const requestData = {
             id: terminalId,
             name: $('#terminal-name-' + terminalId).val(),
-            status: $('#terminal-status-' + terminalId).val()
+            status: $('#terminal-status-' + terminalId).val(),
+            manager: $('#terminal-manager-' + terminalId).val()
         };
         $.ajax({
             url: '{{ url_for("router.client.manage.terminal.update") }}',
@@ -174,8 +170,9 @@
     }
 
     function deleteTerminal(terminalId) {
-        if (!confirm(`${terminalId} 단말기를 삭제하시겠습니까?`)) return;
-
+        if (!confirm(`해당 단말기를 삭제하시겠습니까?\n연관된 정보가 삭제되어 오류가 발생할 수 있습니다.`)) return;
+        if (!confirm(`(2차확인) 해당 단말기를 삭제하시겠습니까?\n연관된 정보가 삭제되어 오류가 발생할 수 있습니다.`)) return;
+        
         $.ajax({
             url: '{{ url_for("router.client.manage.terminal.delete") }}',
             type: 'DELETE',

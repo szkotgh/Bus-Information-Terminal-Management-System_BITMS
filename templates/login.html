@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block body %}
+{% block header %}
+<header>
     <div class="container mt-4">
         <div class="d-flex justify-content-between">
             <div>
@@ -12,13 +13,19 @@
             </div>
         </div>
         <hr>
-        <form method="POST" action="{{ url_for('router.client.login') }}">
+    </div>
+</header>
+{% endblock header %}
+
+{% block body %}
+<div class="container">
+    <form method="POST" action="{{ url_for('router.client.login') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="form-group mb-3">
                 <label for="password">Password</label>
                 <input type="password" class="form-control" name="password" placeholder="Password">
             </div>
             <button type="submit" class="btn btn-primary">Login</button>
-        </form>
-    </div>
+    </form>
+</div>
 {% endblock body %}

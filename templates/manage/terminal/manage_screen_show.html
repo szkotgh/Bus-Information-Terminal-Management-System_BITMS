@@ -1,18 +1,7 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between">
-        <div>
-            <h1>BITMS</h1>
-            <span>Bus Information Terminal Management System</span>
-        </div>
-        <div class="align-self-end">
-            <a href="{{ url_for('router.client.index') }}">Home</a>
-        </div>
-    </div>
-    <hr>
-
+<div class="container">
     <div class="d-flex justify-content-between">
         <div>
             <h3>단말기 화면 관리</h3>
@@ -33,8 +22,8 @@
             <tr>
                 <th scope="col">ID</th>
                 <th scope="col">TID</th>
-                <th scope="col">PID</th>
-                <th scope="col">is Active</th>
+                <th scope="col">Preset</th>
+                <th scope="col">Is Active</th>
                 <th scope="col">Order ID</th>
                 <th scope="col">Desc</th>
                 <th scope="col">Value</th>
@@ -90,7 +79,7 @@
                     <input type="text" class="form-control" id="updateScreenShowDesc{{ screenShow.id }}" name="desc" value="{{ screenShow.desc }}">
                 </div>
                 <div class="mb-2">
-                    <label for="updateScreenShowValue" class="col-form-label">값</label>
+                    <label for="updateScreenShowValue" class="col-form-label">값&nbsp;<span style="font-size: 0.8em;" class="text-muted">&#40;{{ screenShow.preset_info.value_desc }}&#41;</span></label>
                     <input type="text" class="form-control" id="updateScreenShowValue{{ screenShow.id }}" name="value" value="{{ screenShow.value }}">
                 </div>
                 <div class="mb-2">
@@ -208,7 +197,7 @@
             success: (response) => {
                 alert(response.message);
                 $('#updateScreenShowModal' + screenShowId).modal('hide');
-                updateScreenShowList();
+                reloadPage();
             },
             error: (error) => {
                 alert(error?.responseJSON?.message || '삭제 중 오류가 발생했습니다.');
@@ -237,7 +226,7 @@
                         <tr style="cursor: pointer;" onclick="updateScreenShowModalShow(${screenShow.id})">
                             <td>${screenShow.id}</td>
                             <td>${screenShow.terminal_id}</td>
-                            <td>${screenShow.screen_preset_id}</td>
+                            <td>${screenShow.preset_info.name}</td>
                             <td>${screenShow.is_active ? '활성화' : '비활성화'}</td>
                             <td>${screenShow.order_id}</td>
                             <td>${screenShow.desc}</td>
@@ -284,7 +273,7 @@
             success: (response) => {
                 alert(response.message);
                 $('#createScreenPresetModal').modal('hide');
-                updateScreenShowList();
+                reloadPage();
             },
             error: (error) => {
                 alert(error?.responseJSON?.message || '생성 중 오류가 발생했습니다.');

@@ -1,0 +1,483 @@
+{% extends "base.html" %}
+
+{% block body %}
+<style>
+    #cpu-usages-list { white-space: nowrap; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .cpu-core { display: inline-block; width: 88px; text-align: left; }
+</style>
+<div class="container">
+    <div class="d-flex justify-content-between mb-3">
+        <div>
+            <h3>오디오 파일 관리</h3>
+            <span class="text-muted">BIT에 재생할 수 있는 오디오 파일을 관리합니다.</span>
+        </div>
+        <div class="align-self-end">
+            <button class="btn btn-primary" onclick="showFileUploadModal()">파일 업로드</button>
+        </div>
+    </div>
+    {% if terminal_list.success %}
+        <select class="form-select" aria-label="Default select example" onchange="changeTerminal(this.value)">
+            <option value="" selected disabled>단말기를 선택하세요</option>
+            {% for terminal in terminal_list.data %}
+                <option value="{{ terminal.id }}" {% if terminal.status != 'active' %}disabled{% endif %}>{{ terminal.name }}{% if terminal.status != 'active' %}&#40;사용불가&#41;{% endif %}</option>
+            {% endfor %}
+        </select>
+    {% else %}
+        <div class="alert alert-danger">
+            {{ terminal_list.message }}
+        </div>
+    {% endif %}
+    <div class="mt-1">
+        <div>
+            연결상태: <span id="status-label">연결 안됨</span>
+        </div>
+    </div>
+    <hr>
+    <div class="mt-3">
+        <div class="d-flex gap-3">
+            <span>파일 크기 제한: {{ max_upload_size | filesizeformat }}</span>
+            <span>최대 저장 용량: {{ max_folder_size | filesizeformat }}</span>
+        </div>
+        {% set usage_pct = (0 if max_folder_size == 0 else (total_folder_size / max_folder_size * 100)) %}
+        <span>사용량: {{ total_folder_size | filesizeformat }} / {{ max_folder_size | filesizeformat }} ({{ usage_pct | round(1) }}%)</span>
+        <div class="progress">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ usage_pct }}%" aria-valuenow="{{ usage_pct | round(0, 'floor') }}" aria-valuemin="0" aria-valuemax="100">
+                {{ total_folder_size | filesizeformat }}
+            </div>
+        </div>
+    </div>
+    <hr>
+
+    <div class="mt-3 d-flex flex-wrap gap-3 justify-content-center">
+        {% if not audio_file_list %}
+            <div class=" alert alert-info">
+                오디오 파일이 존재하지 않습니다.
+            </div>
+        {% else %}
+            {% for audio_file in audio_file_list %}
+                <div class="card shadow-sm" style="width: 300px;">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="card-title m-0" style="cursor: pointer;" onclick="showFileConfirmModal({{ audio_file.id }})">{{ audio_file.file_name }}</h5>
+                            <div>
+                                <button class="btn btn-primary btn-sm" onclick="sendCommand('playurlhttps://{{ host_domain }}{{ url_for("router.client.manage.audio_files.files.download", file_path=audio_file.file_path) }}')">BIT재생</button>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between m-0 mt-1 mb-2">
+                            <span class="card-text">{{ audio_file.file_description }}</span>
+                            <i class="card-text text-muted">{{ audio_file.file_size | filesizeformat }}</i>
+                        </div>
+                        <audio src="{{ url_for('router.client.manage.audio_files.files.download', file_path=audio_file.file_path) }}" class="w-100" controls></audio>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- File Upload Modal -->
+<div class="modal fade" id="file-upload-modal" tabindex="-1" aria-labelledby="file-upload-modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">파일 업로드</h5>
+            </div>
+            <div class="modal-body">
+                <form id="file-upload-form">
+                    <div class="mb-2">
+                        <label for="file-name" class="col-form-label">파일 이름</label>
+                        <input type="text" class="form-control" id="file-name" name="file-name">
+                    </div>
+                    <div class="mb-4">
+                        <label for="file-description" class="col-form-label">파일 설명</label>
+                        <input type="text" class="form-control" id="file-description" name="file-description" value="(없음)">
+                    </div>
+
+                    
+                    <!-- File Upload -->
+                    <div class="mb-2" id="file-upload-area">
+                        <label for="file-upload-input" class="col-form-label">파일 선택</label>
+                        <input type="file" class="form-control" id="file-upload-input" name="file" accept="audio/*">
+                    </div>
+                    <!-- Audio Record -->
+                    <div class="mb-2" id="audio-record-area" style="display: none;">
+                        <label class="col-form-label">음성 녹음</label>
+                        <div class="d-flex flex-column align-items-center gap-2 p-3 border rounded">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-danger" id="record-start-btn" onclick="startRecording()">
+                                    <i class="bi bi-record-circle"></i> 녹음 시작
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="record-stop-btn" onclick="stopRecording()" disabled>
+                                    <i class="bi bi-stop-circle"></i> 녹음 중지
+                                </button>
+                            </div>
+                            <audio id="recorded-audio-preview" controls style="display: none; width: 100%;" class="mt-2"></audio>
+                            <div id="recording-time" class="text-muted" style="display: none;">00:00</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="d-flex justify-content-between w-100 align-items-center">
+                    <!-- Record Mode Toggle -->
+                    <div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="record-mode-toggle" onchange="toggleRecordMode()">
+                            <label class="form-check-label" for="record-mode-toggle">녹음 모드</label>
+                        </div>
+                    </div>
+
+
+                    <div>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                        <button type="button" class="btn btn-primary" id="file-upload-button">업로드</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Confirm Modal -->
+{% for audio_file in audio_file_list %}
+    <div class="modal fade" id="file-confirm-modal-{{ audio_file.id }}" tabindex="-1" aria-labelledby="file-confirm-modalLabel-{{ audio_file.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">파일 수정</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2">
+                        <label for="id-{{ audio_file.id }}" class="col-form-label">ID</label>
+                        <input type="text" class="form-control" id="id-{{ audio_file.id }}" name="id" value="{{ audio_file.id }}" disabled>
+                    </div>
+                    <div class="mb-2">
+                        <label for="file-name-{{ audio_file.id }}" class="col-form-label">파일 이름</label>
+                        <input type="text" class="form-control" id="file-name-{{ audio_file.id }}" name="file-name" value="{{ audio_file.file_name }}">
+                    </div>
+                    <div class="mb-2">
+                        <label for="file-description-{{ audio_file.id }}" class="col-form-label">파일 설명</label>
+                        <input type="text" class="form-control" id="file-description-{{ audio_file.id }}" name="file-description" value="{{ audio_file.file_description }}">
+                    </div>
+                    <div class="mb-2">
+                        <label for="file-org-name-{{ audio_file.id }}" class="col-form-label">원본 파일 이름</label>
+                        <input type="text" class="form-control" id="file-org-name-{{ audio_file.id }}" name="file-org-name" value="{{ audio_file.file_org_name }}" disabled>
+                    </div>
+                    <div class="mb-2">
+                        <label for="file-path-{{ audio_file.id }}" class="col-form-label">파일 경로</label>
+                        <input type="text" class="form-control" id="file-path-{{ audio_file.id }}" name="file-path" value="{{ audio_file.file_path }}" disabled>
+                    </div>
+                    <div class="mb-2">
+                        <label for="file-size-{{ audio_file.id }}" class="col-form-label">파일 크기</label>
+                        <input type="text" class="form-control" id="file-size-{{ audio_file.id }}" name="file-size" value="{{ audio_file.file_size | filesizeformat }}" disabled>
+                    </div>
+                    <div class="mb-2">
+                        <label for="created-at-{{ audio_file.id }}" class="col-form-label">생성일시</label>
+                        <input type="text" class="form-control" id="created-at-{{ audio_file.id }}" name="created-at" value="{{ audio_file.created_at }}" disabled>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="deleteAudioFile('{{ audio_file.id }}')">삭제</button>
+                    <button type="button" class="btn btn-primary" onclick="updateAudioFile('{{ audio_file.id }}')">수정</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+{% endblock body %}
+
+{% block scripts %}
+<script type="text/javascript" src="{{ url_for('static', filename='assets/socket.io.min.js') }}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='assets/filesize.min.js') }}"></script>
+<script>
+    let selectedTerminalId = '';
+    const fileNameInput = document.getElementById('file-name');
+    const socket = io('/terminal');
+    const fileUploadButton = document.getElementById('file-upload-button');
+    const statusLabel = document.getElementById('status-label');
+    const maxUploadSize = {{ max_upload_size }};
+
+    // Recording variables
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordedBlob = null;
+    let recordingTimer = null;
+    let recordingStartTime = null;
+
+    function showFileUploadModal() {
+        // Reset when modal is opened
+        resetRecordMode();
+        $('#file-upload-modal').modal('show');
+        fileNameInput.value = new Date().toISOString().slice(0,19).replace(/[-T:]/g, "");
+    }
+
+    // Add event listener when modal is closed
+    $('#file-upload-modal').on('hidden.bs.modal', function () {
+        resetRecordMode();
+        document.getElementById('record-mode-toggle').checked = false;
+        toggleRecordMode();
+    });
+
+    function toggleRecordMode() {
+        const toggle = document.getElementById('record-mode-toggle');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const audioRecordArea = document.getElementById('audio-record-area');
+        const fileInput = document.getElementById('file-upload-input');
+
+        if (toggle.checked) {
+            // Change to record mode
+            fileUploadArea.style.display = 'none';
+            audioRecordArea.style.display = 'block';
+            fileInput.value = ''; // Reset file input
+            resetRecordMode();
+        } else {
+            // Change to file upload mode
+            fileUploadArea.style.display = 'block';
+            audioRecordArea.style.display = 'none';
+            resetRecordMode();
+        }
+    }
+
+    function resetRecordMode() {
+        // Reset recording state
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+        mediaRecorder = null;
+        audioChunks = [];
+        recordedBlob = null;
+        if (recordingTimer) {
+            clearInterval(recordingTimer);
+            recordingTimer = null;
+        }
+        recordingStartTime = null;
+
+        // Reset UI
+        document.getElementById('record-start-btn').disabled = false;
+        document.getElementById('record-stop-btn').disabled = true;
+        document.getElementById('recorded-audio-preview').style.display = 'none';
+        document.getElementById('recording-time').style.display = 'none';
+        document.getElementById('file-upload-input').value = '';
+    }
+
+    async function startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                
+                // Convert recorded audio to File object and set to input
+                const fileName = 'recording_' + Date.now() + '.mp3';
+                const audioFile = new File([recordedBlob], fileName, { type: 'audio/webm' });
+                
+                // Use DataTransfer to add file to FileList
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(audioFile);
+                document.getElementById('file-upload-input').files = dataTransfer.files;
+
+                // Show preview
+                const audioPreview = document.getElementById('recorded-audio-preview');
+                audioPreview.src = URL.createObjectURL(recordedBlob);
+                audioPreview.style.display = 'block';
+                
+                // Clean up stream
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            recordingStartTime = Date.now();
+            
+            // Update UI
+            document.getElementById('record-start-btn').disabled = true;
+            document.getElementById('record-stop-btn').disabled = false;
+            document.getElementById('recording-time').style.display = 'block';
+            
+            // Show recording time
+            recordingTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('recording-time').textContent = `${minutes}:${seconds}`;
+            }, 100);
+        } catch (error) {
+            console.error('Recording failed:', error);
+            alert('녹음 모드를 사용하려면 마이크 권한이 필요합니다.\n브라우저 설정에서 마이크 권한을 허용하십시오.');
+        }
+    }
+
+    function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+        }
+        
+        if (recordingTimer) {
+            clearInterval(recordingTimer);
+            recordingTimer = null;
+        }
+        
+        // Update UI
+        document.getElementById('record-start-btn').disabled = false;
+        document.getElementById('record-stop-btn').disabled = true;
+    }
+
+    function setStatusLabelText(status) {
+        statusLabel.textContent = status;
+    }
+
+    setStatusLabelText('connecting');
+    socket.on('connect', () => setStatusLabelText('connected'));
+    socket.on('disconnect', () => setStatusLabelText('disconnected'));
+    socket.on('connect_error', () => setStatusLabelText('error'));
+    if (socket.io && socket.io.on) {
+        socket.io.on('reconnect_attempt', () => setStatusLabelText('connecting'));
+        socket.io.on('reconnect_error', () => setStatusLabelText('error'));
+        socket.io.on('reconnect_failed', () => setStatusLabelText('error'));
+    }
+
+    function changeTerminal(terminalId) {
+        socket.emit('leave_terminal', selectedTerminalId || null);
+        selectedTerminalId = terminalId;
+        socket.emit('join_terminal', selectedTerminalId);
+    }
+    
+    function sendCommand(command) {
+        if (!selectedTerminalId) {
+            alert('터미널을 선택하십시오.');
+            return;
+        }
+        
+        if (confirm(`명령을 전송하시겠습니까?`)) {
+            socket.emit('command', {
+                command: command,
+                terminal_id: parseInt(selectedTerminalId)
+            });
+            console.log(`command sent.\nterminal_id: ${selectedTerminalId}, command: ${command}`);
+            alert(`명령을 전송했습니다.`);
+        }
+    }
+
+    function showFileConfirmModal(audioFileId) {
+        $('#file-confirm-modal-' + audioFileId).modal('show');
+    }
+
+    function updateAudioFile(audioFileId) {
+        if (!confirm('파일 정보를 수정하시겠습니까?')) {
+            return;
+        }
+        
+        const file_name = document.getElementById('file-name-' + audioFileId).value;
+        const file_description = document.getElementById('file-description-' + audioFileId).value;
+        
+        $.ajax({
+            url: '{{ url_for("router.client.manage.audio_files.update") }}',
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                id: audioFileId,
+                file_name: file_name,
+                file_description: file_description
+            }),
+            success: (response) => {
+                alert(response.message);
+                $('#file-confirm-modal-' + audioFileId).modal('hide');
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '파일 수정 중 오류가 발생했습니다.');
+                return;
+            }
+        });
+    }
+
+    function deleteAudioFile(audioFileId) {
+        if (!confirm('해당 파일을 삭제하시겠습니까?')) {
+            return;
+        }
+
+        $.ajax({
+            url: '{{ url_for("router.client.manage.audio_files.delete") }}',
+            type: 'DELETE',
+            contentType: 'application/json',
+            data: JSON.stringify({ id: audioFileId }),
+            success: (response) => {
+                alert(response.message);
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '파일 삭제 중 오류가 발생했습니다.');
+                return;
+            }
+        });
+    }
+
+    function uploadFile() {
+        const fileName = document.getElementById('file-name').value;
+        const fileDescription = document.getElementById('file-description').value;
+        const file = document.getElementById('file-upload-input').files[0];
+        const isRecordMode = document.getElementById('record-mode-toggle').checked;
+        
+        if (!fileName || !fileDescription || !file) {
+            alert('누락된 값을 확인하십시오.');
+            return;
+        }
+        
+        // 녹음 모드일 때 녹음이 완료되었는지 확인
+        if (isRecordMode && !recordedBlob) {
+            alert('먼저 음성을 녹음해주세요.');
+            return;
+        }
+        
+        const ext = file.name.trim().toLowerCase().split('.').pop();
+        // 녹음 파일은 webm이지만 확장자는 mp3로 설정됨
+        if (!['mp3', 'wav', 'ogg', 'm4a', 'aac', 'flac', 'webm'].includes(ext)) {
+            alert('오디오 파일만 업로드 가능합니다.\n지원 파일 포맷: mp3, wav, ogg, m4a, aac, flac');
+            return;
+        }
+
+        if (file.size > maxUploadSize) {
+            alert(`최대 업로드 크기를 초과했습니다.\n\n파일 크기: ${filesize(file.size)}\n최대 업로드 크기: ${filesize(maxUploadSize)}`);
+            return;
+        }
+
+        
+        const formData = new FormData();
+        formData.append('file_name', fileName);
+        formData.append('file_description', fileDescription);
+        formData.append('file', file);
+        
+        $.ajax({
+            url: '{{ url_for("router.client.manage.audio_files.upload") }}',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: (response) => {
+                alert(response.message);
+                $('#file-upload-modal').modal('hide');
+                resetRecordMode();
+                reloadPage();
+            },
+            error: (error) => {
+                alert(error?.responseJSON?.message || '파일 업로드 중 오류가 발생했습니다.');
+                return;
+            }
+        });
+    }
+    fileUploadButton.addEventListener('click', uploadFile);
+</script>
+{% endblock scripts %}

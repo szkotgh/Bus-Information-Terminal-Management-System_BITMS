@@ -23,13 +23,16 @@ app.config['SESSION_COOKIE_SECURE'] = True
 
 app.register_blueprint(router.bp)
 
+
 @app.route('/favicon.ico', methods=['GET'])
 def favicon():
     return send_file('static/favicon.ico')
 
+
 @app.route('/robots.txt', methods=['GET'])
 def robots():
     return send_file('static/robots.txt')
+
 
 @app.after_request
 def add_security_headers(response):
@@ -47,8 +50,9 @@ def add_security_headers(response):
     #     "form-action 'self';"
     # )
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    
+
     return response
+
 
 @app.errorhandler(wtf_csrf.CSRFError)
 def handle_csrf_error(e):
@@ -60,6 +64,8 @@ def handle_csrf_error(e):
 #         return utils.ResultDTO(e.code, str(e)).to_response()
 #     return utils.ResultDTO(500, str(e)).to_response()
 
+
 if __name__ == '__main__':
     socketio.init_app(app, cors_allowed_origins="*")
-    socketio.run(app, host=os.environ["HOST_IP"], port=int(os.environ["HOST_PORT"]), debug=True)
+    socketio.run(app, host=os.environ["HOST_IP"], port=int(
+        os.environ["HOST_PORT"]), debug=True, allow_unsafe_werkzeug=True)

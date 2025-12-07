@@ -1,18 +1,7 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between">
-        <div>
-            <h1>BITMS</h1>
-            <span>Bus Information Terminal Management System</span>
-        </div>
-        <div class="align-self-end">
-            <a href="{{ url_for('router.client.index') }}">Home</a>
-        </div>
-    </div>
-    <hr>
-
+<div class="container">
     <div class="d-flex justify-content-between">
         <div>
             <h3>등록역 관리</h3>
@@ -45,7 +34,7 @@
                         <td>{{ station.region_name }}</td>
                         <td>{{ station.x }}</td>
                         <td>{{ station.y }}</td>
-                        <td>{{ station.created_at }}</td>
+                        <td>{{ station.created_at[:10] }}</td>
                         <td><a href="https://www.google.com/maps/search/{{station.y}},{{station.x}}" target="_blank"><span class="bi bi-box-arrow-up-right"></span> 지도</a></td>
                     </tr>
                 {% endfor %}
@@ -112,24 +101,24 @@
 
 <!-- Create Station Modal -->
 <div class="modal fade" id="createStationModal" tabindex="-1" aria-labelledby="createStationModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="createStationModalLabel">역 검색 및 등록</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <input type="text" class="form-control" id="stationSearchInput" placeholder="역 이름 검색..">
-        <hr>
-        <div id="stationSearchResult">
-            <p class="text-center">검색 결과가 없습니다.</p>
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createStationModalLabel">역 검색 및 등록</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" class="form-control" id="stationSearchInput" placeholder="역 이름 검색..">
+                <hr>
+                <div id="stationSearchResult">
+                    <p class="text-center">검색 결과가 없습니다.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+            </div>
         </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-      </div>
     </div>
-  </div>
 </div>
 
 {% endblock body %}

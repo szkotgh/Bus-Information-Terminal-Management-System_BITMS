@@ -4,3 +4,4 @@ test_api.py
 
 .env
 db/database.db
+db/audio_files/

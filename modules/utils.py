@@ -1,10 +1,9 @@
-from email import utils
 import os
 import uuid
 import hashlib
-from datetime import datetime, timedelta
 import re
 from flask import request
+from datetime import datetime, timedelta
 
 class ResultDTO():
     def __init__(self, code, message, data: dict = {}, success: bool = False):
@@ -54,6 +53,18 @@ def extract_bearer_token(authorization: str) -> str:
     
     return authorization.split(' ')[1]
 
+def extract_file_extension(file_name: str) -> str:
+    extension = file_name.strip().lower().split('.')[-1]
+    return extension
+
+def format_file_size(file_size: int) -> str:
+    size_list = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+    size_index = 0
+    while file_size > 1000:
+        file_size /= 1000
+        size_index += 1
+    return f"{file_size:.2f} {size_list[size_index]}"
+
 # Datetime
 def get_current_datetime() -> datetime:
     return datetime.utcnow() + timedelta(hours=9)
@@ -92,3 +103,4 @@ def is_valid_password(password: str) -> bool:
     if not re.match(r'^[a-zA-Z0-9!@#$%^&*()_+\-=\[\]{};:\'",.<>/?]+$', password):
         return RegexResultDTO(success=False, detail="영숫자, 기호만 사용 가능합니다.")
     return RegexResultDTO(success=True, detail="비밀번호가 유효합니다.")
+
