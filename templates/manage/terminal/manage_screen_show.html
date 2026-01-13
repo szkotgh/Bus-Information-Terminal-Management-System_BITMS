@@ -26,13 +26,16 @@
                 <th scope="col">Is Active</th>
                 <th scope="col">Order ID</th>
                 <th scope="col">Desc</th>
-                <th scope="col">Value</th>
+                <th scope="col">Value1</th>
+                <th scope="col">Value2</th>
+                <th scope="col">Value3</th>
+                <th scope="col">Value4</th>
                 <th scope="col">Created At</th>
             </tr>
         </thead>
         <tbody id="screenShowList">
             <tr>
-                <td colspan="8" class="text-center">단말기를 선택하십시오.</td>
+                <td colspan="11" class="text-center">단말기를 선택하십시오.</td>
             </tr>
         </tbody>
     </table>
@@ -79,8 +82,20 @@
                     <input type="text" class="form-control" id="updateScreenShowDesc{{ screenShow.id }}" name="desc" value="{{ screenShow.desc }}">
                 </div>
                 <div class="mb-2">
-                    <label for="updateScreenShowValue" class="col-form-label">값&nbsp;<span style="font-size: 0.8em;" class="text-muted">&#40;{{ screenShow.preset_info.value_desc }}&#41;</span></label>
-                    <input type="text" class="form-control" id="updateScreenShowValue{{ screenShow.id }}" name="value" value="{{ screenShow.value }}">
+                    <label for="updateScreenShowValue1" class="col-form-label">값1&nbsp;<span style="font-size: 0.8em;" class="text-muted">&#40;{{ screenShow.preset_info.value1_desc }}&#41;</span></label>
+                    <input type="text" class="form-control" id="updateScreenShowValue1{{ screenShow.id }}" name="value1" value="{{ screenShow.value1 }}">
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowValue2" class="col-form-label">값2&nbsp;<span style="font-size: 0.8em;" class="text-muted">&#40;{{ screenShow.preset_info.value2_desc }}&#41;</span></label>
+                    <input type="text" class="form-control" id="updateScreenShowValue2{{ screenShow.id }}" name="value2" value="{{ screenShow.value2 }}">
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowValue3" class="col-form-label">값3&nbsp;<span style="font-size: 0.8em;" class="text-muted">&#40;{{ screenShow.preset_info.value3_desc }}&#41;</span></label>
+                    <input type="text" class="form-control" id="updateScreenShowValue3{{ screenShow.id }}" name="value3" value="{{ screenShow.value3 }}">
+                </div>
+                <div class="mb-2">
+                    <label for="updateScreenShowValue4" class="col-form-label">값4&nbsp;<span style="font-size: 0.8em;" class="text-muted">&#40;{{ screenShow.preset_info.value4_desc }}&#41;</span></label>
+                    <input type="text" class="form-control" id="updateScreenShowValue4{{ screenShow.id }}" name="value4" value="{{ screenShow.value4 }}">
                 </div>
                 <div class="mb-2">
                     <label for="updateScreenShowCreatedAt" class="col-form-label">생성일</label>
@@ -135,8 +150,20 @@
                     <input type="text" class="form-control" id="createScreenShowDesc" name="desc">
                 </div>
                 <div class="mb-2">
-                    <label for="value" class="col-form-label">값</label>
-                    <input type="text" class="form-control" id="createScreenShowValue" name="value">
+                    <label for="value1" class="col-form-label">값1</label>
+                    <input type="text" class="form-control" id="createScreenShowValue1" name="value1">
+                </div>
+                <div class="mb-2">
+                    <label for="value2" class="col-form-label">값2</label>
+                    <input type="text" class="form-control" id="createScreenShowValue2" name="value2">
+                </div>
+                <div class="mb-2">
+                    <label for="value3" class="col-form-label">값3</label>
+                    <input type="text" class="form-control" id="createScreenShowValue3" name="value3">
+                </div>
+                <div class="mb-2">
+                    <label for="value4" class="col-form-label">값4</label>
+                    <input type="text" class="form-control" id="createScreenShowValue4" name="value4">
                 </div>
             </div>
             <div class="modal-footer">
@@ -163,8 +190,11 @@
         const is_active = $('#updateScreenShowIsActive' + screenShowId).val() === 'true';
         const order_id = $('#updateScreenShowOrderId' + screenShowId).val();
         const desc = $('#updateScreenShowDesc' + screenShowId).val();
-        const value = $('#updateScreenShowValue' + screenShowId).val();
-        if (!terminal_id || !screen_preset_id || is_active === undefined || is_active === null || !order_id || !desc || !value) {
+        const value1 = $('#updateScreenShowValue1' + screenShowId).val() || '';
+        const value2 = $('#updateScreenShowValue2' + screenShowId).val() || '';
+        const value3 = $('#updateScreenShowValue3' + screenShowId).val() || '';
+        const value4 = $('#updateScreenShowValue4' + screenShowId).val() || '';
+        if (!terminal_id || !screen_preset_id || is_active === undefined || is_active === null || !order_id || !desc) {
             alert('누락된 값을 확인하십시오.');
             return;
         }
@@ -172,7 +202,7 @@
             url: '{{ url_for("router.client.manage.terminal_showmanage.update") }}',
             type: 'PUT',
             contentType: 'application/json',
-            data: JSON.stringify({ id: screenShowId, terminal_id, screen_preset_id, is_active, order_id, desc, value }),
+            data: JSON.stringify({ id: screenShowId, terminal_id, screen_preset_id, is_active, order_id, desc, value1, value2, value3, value4 }),
             success: (response) => {
                 alert(response.message);
                 $('#updateScreenShowModal' + screenShowId).modal('hide');
@@ -230,7 +260,10 @@
                             <td>${screenShow.is_active ? '활성화' : '비활성화'}</td>
                             <td>${screenShow.order_id}</td>
                             <td>${screenShow.desc}</td>
-                            <td>${screenShow.value}</td>
+                            <td>${screenShow.value1 || ''}</td>
+                            <td>${screenShow.value2 || ''}</td>
+                            <td>${screenShow.value3 || ''}</td>
+                            <td>${screenShow.value4 || ''}</td>
                             <td>${screenShow.created_at}</td>
                         </tr>
                     `);
@@ -240,7 +273,7 @@
                 $('#screenShowList').html('');
                 $('#screenShowList').append(`
                     <tr>
-                        <td colspan="8" class="text-center">${error?.responseJSON?.message || '조회 중 오류가 발생했습니다.'}</td>
+                        <td colspan="11" class="text-center">${error?.responseJSON?.message || '조회 중 오류가 발생했습니다.'}</td>
                     </tr>
                 `);
             }
@@ -260,8 +293,11 @@
         const is_active = $('#createScreenShowIsActive').val() === 'true';
         const order_id = $('#createScreenShowOrderId').val();
         const desc = $('#createScreenShowDesc').val();
-        const value = $('#createScreenShowValue').val();
-        if (!terminal_id || !screen_preset_id || is_active === undefined || is_active === null || !order_id || !desc || !value) {
+        const value1 = $('#createScreenShowValue1').val() || '';
+        const value2 = $('#createScreenShowValue2').val() || '';
+        const value3 = $('#createScreenShowValue3').val() || '';
+        const value4 = $('#createScreenShowValue4').val() || '';
+        if (!terminal_id || !screen_preset_id || is_active === undefined || is_active === null || !order_id || !desc) {
             alert('누락된 값을 확인하십시오.');
             return;
         }
@@ -269,7 +305,7 @@
             url: '{{ url_for("router.client.manage.terminal_showmanage.create") }}',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ terminal_id, screen_preset_id, is_active, order_id, desc, value }),
+            data: JSON.stringify({ terminal_id, screen_preset_id, is_active, order_id, desc, value1, value2, value3, value4 }),
             success: (response) => {
                 alert(response.message);
                 $('#createScreenPresetModal').modal('hide');

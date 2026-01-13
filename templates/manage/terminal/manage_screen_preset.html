@@ -17,7 +17,10 @@
                 <th scope="col">ID</th>
                 <th scope="col">Name</th>
                 <th scope="col">Command</th>
-                <th scope="col">Value Desc</th>
+                <th scope="col">Value1 Desc</th>
+                <th scope="col">Value2 Desc</th>
+                <th scope="col">Value3 Desc</th>
+                <th scope="col">Value4 Desc</th>
             </tr>
         </thead>
         <tbody>
@@ -26,7 +29,10 @@
                     <td>{{ screenPreset.id }}</td>
                     <td>{{ screenPreset.name }}</td>
                     <td>{{ screenPreset.command }}</td>
-                    <td>{{ screenPreset.value_desc }}</td>
+                    <td>{{ screenPreset.value1_desc }}</td>
+                    <td>{{ screenPreset.value2_desc }}</td>
+                    <td>{{ screenPreset.value3_desc }}</td>
+                    <td>{{ screenPreset.value4_desc }}</td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -58,8 +64,20 @@
                     <input type="text" class="form-control" id="infoScreenPresetCommand{{ screenPreset.id }}" name="command" value="{{ screenPreset.command }}">
                 </div>
                 <div class="mb-2">
-                    <label for="value_desc" class="col-form-label">값 설명</label>
-                    <input type="text" class="form-control" id="infoScreenPresetValueDesc{{ screenPreset.id }}" name="value_desc" value="{{ screenPreset.value_desc }}">
+                    <label for="value1_desc" class="col-form-label">값1 설명</label>
+                    <input type="text" class="form-control" id="infoScreenPresetValue1Desc{{ screenPreset.id }}" name="value1_desc" value="{{ screenPreset.value1_desc }}">
+                </div>
+                <div class="mb-2">
+                    <label for="value2_desc" class="col-form-label">값2 설명</label>
+                    <input type="text" class="form-control" id="infoScreenPresetValue2Desc{{ screenPreset.id }}" name="value2_desc" value="{{ screenPreset.value2_desc }}">
+                </div>
+                <div class="mb-2">
+                    <label for="value3_desc" class="col-form-label">값3 설명</label>
+                    <input type="text" class="form-control" id="infoScreenPresetValue3Desc{{ screenPreset.id }}" name="value3_desc" value="{{ screenPreset.value3_desc }}">
+                </div>
+                <div class="mb-2">
+                    <label for="value4_desc" class="col-form-label">값4 설명</label>
+                    <input type="text" class="form-control" id="infoScreenPresetValue4Desc{{ screenPreset.id }}" name="value4_desc" value="{{ screenPreset.value4_desc }}">
                 </div>
                 <div class="mb-2">
                     <label for="created_at" class="col-form-label">생성일</label>
@@ -94,8 +112,20 @@
                     <input type="text" class="form-control" id="createScreenPresetCommand" name="command">
                 </div>
                 <div class="mb-2">
-                    <label for="value_desc" class="col-form-label">값 설명</label>
-                    <input type="text" class="form-control" id="createScreenPresetValueDesc" name="value_desc">
+                    <label for="value1_desc" class="col-form-label">값1 설명</label>
+                    <input type="text" class="form-control" id="createScreenPresetValue1Desc" name="value1_desc">
+                </div>
+                <div class="mb-2">
+                    <label for="value2_desc" class="col-form-label">값2 설명</label>
+                    <input type="text" class="form-control" id="createScreenPresetValue2Desc" name="value2_desc">
+                </div>
+                <div class="mb-2">
+                    <label for="value3_desc" class="col-form-label">값3 설명</label>
+                    <input type="text" class="form-control" id="createScreenPresetValue3Desc" name="value3_desc">
+                </div>
+                <div class="mb-2">
+                    <label for="value4_desc" class="col-form-label">값4 설명</label>
+                    <input type="text" class="form-control" id="createScreenPresetValue4Desc" name="value4_desc">
                 </div>
             </div>
             <div class="modal-footer">
@@ -121,8 +151,11 @@
     function createScreenPresetSubmit() {
         const name = $('#createScreenPresetName').val();
         const command = $('#createScreenPresetCommand').val();
-        const value_desc = $('#createScreenPresetValueDesc').val();
-        if (!name || !command || !value_desc) {
+        const value1_desc = $('#createScreenPresetValue1Desc').val() || '';
+        const value2_desc = $('#createScreenPresetValue2Desc').val() || '';
+        const value3_desc = $('#createScreenPresetValue3Desc').val() || '';
+        const value4_desc = $('#createScreenPresetValue4Desc').val() || '';
+        if (!name || !command) {
             alert('누락된 값을 확인하십시오.');
             return;
         }
@@ -130,7 +163,7 @@
             url: '{{ url_for("router.client.manage.screen_preset.create") }}',
             type: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ name, command, value_desc }),
+            data: JSON.stringify({ name, command, value1_desc, value2_desc, value3_desc, value4_desc }),
             success: (response) => {
 
                 alert(response.message);
@@ -170,9 +203,12 @@
     function updateScreenPreset(id) {
         const name = $('#infoScreenPresetName' + id).val();
         const command = $('#infoScreenPresetCommand' + id).val();
-        const value_desc = $('#infoScreenPresetValueDesc' + id).val();
+        const value1_desc = $('#infoScreenPresetValue1Desc' + id).val() || '';
+        const value2_desc = $('#infoScreenPresetValue2Desc' + id).val() || '';
+        const value3_desc = $('#infoScreenPresetValue3Desc' + id).val() || '';
+        const value4_desc = $('#infoScreenPresetValue4Desc' + id).val() || '';
         
-        if (!name || !command || !value_desc) {
+        if (!name || !command) {
             alert('누락된 값을 확인하십시오.');
             return;
         }
@@ -181,7 +217,7 @@
             url: '{{ url_for("router.client.manage.screen_preset.update") }}',
             type: 'PUT',
             contentType: 'application/json',
-            data: JSON.stringify({ id, name, command, value_desc }),
+            data: JSON.stringify({ id, name, command, value1_desc, value2_desc, value3_desc, value4_desc }),
             success: (response) => {
                 alert(response.message);
                 $('#infoScreenPresetModal' + id).modal('hide');

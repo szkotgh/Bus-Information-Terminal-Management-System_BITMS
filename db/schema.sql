@@ -21,7 +21,11 @@ CREATE TABLE IF NOT EXISTS terminal_screen_preset (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     command TEXT NOT NULL UNIQUE,
-    value_desc TEXT NOT NULL,
+    desc TEXT DEFAULT "",
+    value1_desc TEXT DEFAULT "미사용",
+    value2_desc TEXT DEFAULT "미사용",
+    value3_desc TEXT DEFAULT "미사용",
+    value4_desc TEXT DEFAULT "미사용",
     created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours'))
 );
 
@@ -31,9 +35,12 @@ CREATE TABLE IF NOT EXISTS terminal_screen_show (
     screen_preset_id INTEGER NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
     order_id INTEGER NOT NULL,
-    desc TEXT DEFAULT '',
-    value TEXT DEFAULT '',
-    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours')),
+    desc TEXT DEFAULT "",
+    value1 TEXT DEFAULT NULL,
+    value2 TEXT DEFAULT NULL,
+    value3 TEXT DEFAULT NULL,
+    value4 TEXT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT (datetime("now", "+9 hours")),
     FOREIGN KEY (terminal_id) REFERENCES terminal(id) ON DELETE CASCADE,
     FOREIGN KEY (screen_preset_id) REFERENCES terminal_screen_preset(id) ON DELETE CASCADE
 );
@@ -47,15 +54,15 @@ CREATE TABLE IF NOT EXISTS terminal_screen_show (
 --     FOREIGN KEY (terminal_id) REFERENCES terminal(id) ON DELETE CASCADE
 -- );
 
-CREATE TABLE IF NOT EXISTS station (
-    station_id INTEGER PRIMARY KEY,
-    station_name TEXT NOT NULL,
-    mobile_no INTEGER NOT NULL,
-    region_name TEXT NOT NULL,
-    x REAL NOT NULL,
-    y REAL NOT NULL,
-    created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours'))
-);
+-- CREATE TABLE IF NOT EXISTS station (
+--     station_id INTEGER PRIMARY KEY,
+--     station_name TEXT NOT NULL,
+--     mobile_no INTEGER NOT NULL,
+--     region_name TEXT NOT NULL,
+--     x REAL NOT NULL,
+--     y REAL NOT NULL,
+--     created_at TIMESTAMP DEFAULT (datetime('now', '+9 hours'))
+-- );
 
 CREATE TABLE IF NOT EXISTS audio_files (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -24,23 +24,25 @@
         <tbody>
             {% if session_list.success %}
                 {% for session in session_list.data %}
-                    <tr>
-                        <th scope="row" onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.id }}</th>
-                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.ip }}</td>
-                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;"><span class="d-inline-block text-truncate" style="max-width: 300px;">{{ session.user_agent }}</span></td>
-                        <td onclick="deactivateSession({{ session.id }})" style="cursor: pointer;">
-                            {% if session.status == 'active' %}
-                                <span class="text-success">로그인{% if user_session_id == session.session_id %}<span class="text-success">(현재 세션)</span>{% endif %}</span>
-                            {% elif session.status == 'inactive' %}
-                                <span class="text-danger">로그아웃</span>
-                            {% elif session.status == 'blocked' %}
-                                <span class="text-danger">차단됨</span>
-                            {% else %}
-                                <span class="text-muted">알 수 없음</span>
-                            {% endif %}
-                        </td>
-                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.created_at }}</td>
-                    </tr>
+                    {% if session.status == 'active' %}
+                        <tr>
+                            <th scope="row" onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.id }}</th>
+                            <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.ip }}</td>
+                            <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;"><span class="d-inline-block text-truncate" style="max-width: 300px;">{{ session.user_agent }}</span></td>
+                            <td onclick="deactivateSession({{ session.id }})" style="cursor: pointer;">
+                                {% if session.status == 'active' %}
+                                    <span class="text-success">로그인{% if user_session_id == session.session_id %}<span class="text-success">(현재 세션)</span>{% endif %}</span>
+                                {% elif session.status == 'inactive' %}
+                                    <span class="text-danger">로그아웃</span>
+                                {% elif session.status == 'blocked' %}
+                                    <span class="text-danger">차단됨</span>
+                                {% else %}
+                                    <span class="text-muted">알 수 없음</span>
+                                {% endif %}
+                            </td>
+                            <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.created_at }}</td>
+                        </tr>
+                    {% endif %}
                 {% endfor %}
             {% else %}
                 <tr>
@@ -49,6 +51,49 @@
             {% endif %}
         </tbody>
     </table>
+
+    <div class="accordion accordion-flush" id="accordionFlushExample">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                비활성화 세션 목록
+                </button>
+            </h2>
+            <div id="flush-collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                <table class="table mt-3">
+                    <tbody>
+                        {% if session_list.success %}
+                            {% for session in session_list.data %}
+                                {% if session.status != 'active' %}
+                                    <tr>
+                                        <th scope="row" onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.id }}</th>
+                                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.ip }}</td>
+                                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;"><span class="d-inline-block text-truncate" style="max-width: 300px;">{{ session.user_agent }}</span></td>
+                                        <td onclick="deactivateSession({{ session.id }})" style="cursor: pointer;">
+                                            {% if session.status == 'active' %}
+                                                <span class="text-success">로그인{% if user_session_id == session.session_id %}<span class="text-success">(현재 세션)</span>{% endif %}</span>
+                                            {% elif session.status == 'inactive' %}
+                                                <span class="text-danger">로그아웃</span>
+                                            {% elif session.status == 'blocked' %}
+                                                <span class="text-danger">차단됨</span>
+                                            {% else %}
+                                                <span class="text-muted">알 수 없음</span>
+                                            {% endif %}
+                                        </td>
+                                        <td onclick="sessionDetailModalShow({{ session.id }})" style="cursor: pointer;">{{ session.created_at }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center">비활성화된 세션이 없습니다.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>  
 </div>
 
 {% if session_list.success %}
