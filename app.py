@@ -58,11 +58,11 @@ def add_security_headers(response):
 def handle_csrf_error(e):
     return utils.ResultDTO(400, e).to_response()
 
-# @app.errorhandler(Exception)
-# def handle_exception(e):
-#     if hasattr(e, 'code'):
-#         return utils.ResultDTO(e.code, str(e)).to_response()
-#     return utils.ResultDTO(500, str(e)).to_response()
+@app.errorhandler(Exception)
+def handle_exception(e):
+    if hasattr(e, 'code'):
+        return utils.ResultDTO(e.code, str(e)).to_response()
+    return utils.ResultDTO(500, str(e)).to_response()
 
 
 if __name__ == '__main__':
